@@ -2,13 +2,19 @@ import json
 import random
 import time
 
+import pandas as pd
+from IPython.core.display_functions import display
+
+from eyetracking.event_detection import detect_fixations
 from eyetracking.windows import test_windows
+from training.ML import ml
+from preprocessing import process_test_data
 
 
 # Function to generate mock eyetracking data with timestamps
 def generate_mock_eyetracking_data(file_path, num_points):
     eyetracking_data = []
-    current_time = int(time.time() * 1000)  # Current time in milliseconds
+    current_time = 0  # Current time in seconds
 
     for i in range(num_points):
         # Generate random eyetracking coordinates
@@ -16,7 +22,7 @@ def generate_mock_eyetracking_data(file_path, num_points):
         y = random.uniform(0, 1080)  # Assuming screen height of 1080 pixels
 
         # Generate timestamp for each point
-        timestamp = current_time + i * 10  # Incrementing by 10 milliseconds
+        timestamp = current_time + i  # Incrementing by 10 milliseconds
         eyetracking_data.append({"x": x, "y": y, "timestamp": timestamp})
 
     with open(file_path, 'w') as file:
@@ -27,10 +33,13 @@ def generate_mock_eyetracking_data(file_path, num_points):
 
 mock_file_path = "./mock_eyetracking_data.json"
 
+train_data = pd.read_csv("training/CSVs/eyetracking_by_event.csv")
+test_data_path = "eyetracking/test-data/gaze_data.csv"
+
 
 def main():
-    mock_data = generate_mock_eyetracking_data(mock_file_path, 1000)  # Generate 1000 points
-    test_windows(mock_data, 20)
+    test_windows(test_data_path, 5)
+    # print((198220010446-194350979093)/1000000/60)
 
 
 if __name__ == "__main__":

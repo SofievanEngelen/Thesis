@@ -4,7 +4,7 @@ import warnings
 import numpy as np
 from IPython.core.display_functions import display
 
-from preprocess_files import process_timings, process_participants, process_scores_file
+from preprocessing import process_timings, process_participants, process_scores_file
 
 warnings.simplefilter(action='ignore', category=Warning)
 
@@ -221,40 +221,6 @@ def add_timings(fixations: pd.DataFrame, saccades: pd.DataFrame, blinks: pd.Data
 
 
 def agg_by_window(window: int = 20):
-    # Check if t
-    if (os.path.isfile("CSVs/input files/fixations.csv")
-            and os.path.isfile("CSVs/input files/saccades.csv")
-            and os.path.isfile("CSVs/input files/blinks.csv")
-            and os.path.isfile("CSVs/input files/userevents.csv")):
-
-        print("Pre-loading event csv files...")
-
-        fixations = pd.read_csv("CSVs/input files/fixations.csv")
-        saccades = pd.read_csv("CSVs/input files/saccades.csv")
-        blinks = pd.read_csv("CSVs/input files/blinks.csv")
-        userevents = pd.read_csv("CSVs/input files/userevents.csv")
-    else:
-        print("Processing participants files...")
-
-        process_participants()
-
-        fixations = pd.read_csv("CSVs/input files/fixations.csv")
-        saccades = pd.read_csv("CSVs/input files/saccades.csv")
-        blinks = pd.read_csv("CSVs/input files/blinks.csv")
-        userevents = pd.read_csv("CSVs/input files/userevents.csv")
-
-    if os.path.isfile("CSVs/input files/timings.csv"):
-
-        print("Pre-loading timings csv file...")
-
-        timings = pd.read_csv("CSVs/input files/timings.csv")
-    else:
-        print("Processing timings file...")
-
-        process_timings()
-
-        timings = pd.read_csv("CSVs/input files/timings.csv")
-
     if os.path.isfile("CSVs/input files/scores.csv"):
 
         print("Pre-loading MW scores csv file...")
@@ -280,6 +246,39 @@ def agg_by_window(window: int = 20):
     else:
         print("Processing timed_events files...")
 
+        if (os.path.isfile("CSVs/input files/fixations.csv")
+                and os.path.isfile("CSVs/input files/saccades.csv")
+                and os.path.isfile("CSVs/input files/blinks.csv")
+                and os.path.isfile("CSVs/input files/userevents.csv")):
+
+            print("Pre-loading event csv files...")
+
+            fixations = pd.read_csv("CSVs/input files/fixations.csv")
+            saccades = pd.read_csv("CSVs/input files/saccades.csv")
+            blinks = pd.read_csv("CSVs/input files/blinks.csv")
+            userevents = pd.read_csv("CSVs/input files/userevents.csv")
+        else:
+            print("Processing participants files...")
+
+            process_participants()
+
+            fixations = pd.read_csv("CSVs/input files/fixations.csv")
+            saccades = pd.read_csv("CSVs/input files/saccades.csv")
+            blinks = pd.read_csv("CSVs/input files/blinks.csv")
+            userevents = pd.read_csv("CSVs/input files/userevents.csv")
+
+        if os.path.isfile("CSVs/input files/timings.csv"):
+
+            print("Pre-loading timings csv file...")
+
+            timings = pd.read_csv("CSVs/input files/timings.csv")
+        else:
+            print("Processing timings file...")
+
+            process_timings()
+
+            timings = pd.read_csv("CSVs/input files/timings.csv")
+
         add_timings(fixations, saccades, blinks, userevents,
                     timings, window)
 
@@ -292,7 +291,6 @@ def agg_by_window(window: int = 20):
         mean_columns.remove(x)
 
     eyetracking_by_event = pd.merge(fixations_by_event, saccades_by_event, on=["Participant", "Probe", "Eye"])
-
     eyetracking_by_event = pd.merge(eyetracking_by_event, blinks_by_event, on=["Participant", "Probe", "Eye"])
     eyetracking_by_event = calculate_mean_columns(eyetracking_by_event, mean_columns)
 

@@ -4,11 +4,12 @@ import re
 import pyreadr
 import pandas as pd
 from IPython.core.display_functions import display
+from sklearn.preprocessing import OneHotEncoder
 
 # Define file paths
-timing_data_dir = "Thesis data/Data Timings"
-participant_data_dir = "Thesis data/Myrthe Faber/dat"
-scores_path = "Thesis data/XML_data_cleaned.Rda"
+timing_data_dir = "training-data/Data Timings"
+participant_data_dir = "training-data/Myrthe Faber/dat"
+scores_path = "training-data/XML_data_cleaned.Rda"
 
 # Define participants to be rejected
 rejected_participants = {"p21", "p30", "p39", "p51", "p64", "p66", "p69", "p71", "p74", "p93"}
@@ -44,21 +45,6 @@ def filter_event(data: pd.DataFrame, participant: str, event: str):
             pp_events = data[data["v1"] == "UserEvent"].copy(deep=True)
             pp_events["v5"] = [re.sub(pattern=r'# Message: ', repl='', string=list(pp_events["v5"])[i]) for i in
                                range(len(pp_events["v5"]))]
-    # if event == "Userevents":
-    #     pp_events = data[data["v1"] == "UserEvent"].copy(deep=True)
-    #     pp_events["v5"] = [re.sub(pattern=r'# Message: ', repl='', string=list(pp_events["v5"])[i]) for i in
-    #                        range(len(pp_events["v5"]))]
-    #
-    # event_types = {
-    #     "Fixations": {"Fixation L", "Fixation R"},
-    #     "Saccades": {"Saccade L", "Saccade R"},
-    #     "Blinks": {"Blink L", "Blink R"},
-    # }
-    #
-    # pp_events = data[data["v1"].isin(event_types[event])].copy()
-    # pp_events["Eye"] = pp_events["v1"].str.split(" ", expand=True)[0]
-
-
 
     pp_events["Participant"] = participant
 
@@ -88,7 +74,7 @@ def process_participant_file(file_path: str):
     return pp_data_filtered, participant
 
 
-def process_participants(p_dir: str = None) -> None:
+def process_train_participants(p_dir: str = None) -> None:
     """
     Process all participant files in the given directory.
 
@@ -188,11 +174,12 @@ def process_scores_file(r_path: str = None) -> None:
     """
     if r_path is None:
         r_path = scores_path
-    scores = pyreadr.read_r(r_path)
+    scores_file = pyreadr.read_r(r_path)
 
-    scores_df = scores["XML_data_cleaned"]
+    scores_df = scores_file["XML_data_cleaned"]
 
-    scores_df["Thought_Type"] = scores_df["Thought_Type"].astype(int) - 1
+    scores = scores_df["Thought_Type"].astype(int).values.reshape(-1, 1)
+    scores_df["Thought_Type"] = OneHotEncoder().fit_transform(scores).toarray()
 
     scores_df[['Participant', 'Probe', 'Thought_Type']].to_csv("input files/scores.csv")
 
@@ -281,7 +268,7 @@ def process_timings_file(file_path) -> pd.DataFrame:
     return timings
 
 
-def process_timings(t_dir=None) -> None:
+def process_train_timings(t_dir=None) -> None:
     """
     Process all timing files in the given directory.
 
@@ -294,8 +281,6 @@ def process_timings(t_dir=None) -> None:
     if t_dir is None:
         t_dir = timing_data_dir
 
-    # t_files = [os.path.join(t_dir, f) for f in os.listdir(t_dir) if re.match(r"[pP][0-9]+\.txt$", f)]
-
     timings = []
 
     # Process timing files
@@ -303,9 +288,58 @@ def process_timings(t_dir=None) -> None:
         if re.match(r"[pP][0-9]+\.txt$", t_file):
             timings.append(process_timings_file(os.path.join(t_dir, t_file)))
 
-    # timings = [process_timings_file(t_file) for t_file in t_files]
-
     # Concatenate timings dataframes
     timings_df = pd.concat(timings, ignore_index=True)
 
     timings_df.to_csv("input files/timings.csv")
+
+
+def process_test_data():
+    data = pd.read_csv("./eyetracking/gaze_data.csv")
+
+    # Participants
+    unique_participants = data['Participant'].unique()
+    print(type(unique_participants))
+
+    for p in ['593890eac6aa16000101f037']:
+        new_p = f"p{list(unique_participants).index(p) + 1}"
+        # Rename participants to p1, p2, etc.
+        data['Participant'] = data['Participant'].str.replace(p, new_p)
+
+        # set last_time=0, go through all paragraphs, add time to last_time, set last_time=last time of paragraph
+        prev_time = 0
+
+        # option 1
+        # Calculate cumulative time within each paragraph for the current participant
+        # p_df['cumulative_time'] = p_df.groupby('Paragraph')['time'].cumsum()
+
+        # Update the 'time' column with cumulative time for the current participant
+        # data.loc[data['Participant'] == new_p, 'time'] = p_df['cumulative_time'] + prev_time
+        # # Update previous time for the next participant
+        # prev_time = p_df['cumulative_time'].iloc[-1]
+
+        # option 2
+        p_df = data[data['Participant'] == new_p]
+        for para in p_df['Paragraph'].unique():
+            para_df = p_df[p_df['Paragraph'] == para]
+            # display(para_df)
+            for time in para_df['time']:
+                new_time = time + prev_time
+                data.loc[(data['Participant'] == new_p) & (data['Paragraph'] == para), 'time'] = new_time
+
+            prev_time = new_time
+
+
+        # for para in p_df['Paragraph'].unique():
+        #     for time in p_df[p_df['Paragraph'] == para]['time']:
+        #         new_time = prev_time + time
+        #         data.replace(time, new_time, inplace=True)
+        #     prev_time = new_time
+        # print(p)
+
+    data.to_csv("eye_tracking_test.csv")
+    # display(data[['Participant', 'Paragraph', 'time']].head(200))
+
+    # Pixels
+
+    # Times
