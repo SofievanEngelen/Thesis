@@ -295,51 +295,29 @@ def process_train_timings(t_dir=None) -> None:
 
 
 def process_test_data():
-    data = pd.read_csv("./eyetracking/gaze_data.csv")
+    data = pd.read_csv("./eyetracking/test-data/gaze_data.csv")
+    score_data = pd.read_csv("./eyetracking/test-data/Probe_data.csv")
+
+    # Merge scores with gaze data, by probe
+    # probes after paragraphs 4, 10, 15, 20, 26, 30, and 36
 
     # Participants
     unique_participants = data['Participant'].unique()
-    print(type(unique_participants))
 
     for p in ['593890eac6aa16000101f037']:
+        # Rename participants
         new_p = f"p{list(unique_participants).index(p) + 1}"
-        # Rename participants to p1, p2, etc.
         data['Participant'] = data['Participant'].str.replace(p, new_p)
 
-        # set last_time=0, go through all paragraphs, add time to last_time, set last_time=last time of paragraph
+        # Cumulative time over all paragraphs
         prev_time = 0
+        for para in data['Paragraph'].unique():
+            data.loc[(data['Participant'] == new_p) & (data['Paragraph'] == para), 'time'] += prev_time
+            prev_time = data.loc[(data['Participant'] == new_p) & (data['Paragraph'] == para), 'time'].iloc[-1]
 
-        # option 1
-        # Calculate cumulative time within each paragraph for the current participant
-        # p_df['cumulative_time'] = p_df.groupby('Paragraph')['time'].cumsum()
-
-        # Update the 'time' column with cumulative time for the current participant
-        # data.loc[data['Participant'] == new_p, 'time'] = p_df['cumulative_time'] + prev_time
-        # # Update previous time for the next participant
-        # prev_time = p_df['cumulative_time'].iloc[-1]
-
-        # option 2
-        p_df = data[data['Participant'] == new_p]
-        for para in p_df['Paragraph'].unique():
-            para_df = p_df[p_df['Paragraph'] == para]
-            # display(para_df)
-            for time in para_df['time']:
-                new_time = time + prev_time
-                data.loc[(data['Participant'] == new_p) & (data['Paragraph'] == para), 'time'] = new_time
-
-            prev_time = new_time
-
-
-        # for para in p_df['Paragraph'].unique():
-        #     for time in p_df[p_df['Paragraph'] == para]['time']:
-        #         new_time = prev_time + time
-        #         data.replace(time, new_time, inplace=True)
-        #     prev_time = new_time
-        # print(p)
+    # Convert eye coordinates to pixels
+    data["x"] = data["x"] * data["WinWidth"] + (data["WinWidth"] / 2)
+    data["y"] = (data["WinHeight"] / 2) - data["y"] * data["WinHeight"]
+    data.drop(['WinWidth', 'WinHeight', 'Paragraph'], axis=1)
 
     data.to_csv("eye_tracking_test.csv")
-    # display(data[['Participant', 'Paragraph', 'time']].head(200))
-
-    # Pixels
-
-    # Times

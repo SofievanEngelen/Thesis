@@ -6,7 +6,7 @@ import pandas as pd
 from IPython.core.display_functions import display
 
 from eyetracking.event_detection import detect_fixations
-from eyetracking.windows import test_windows
+from eyetracking.windows import windows
 from training.ML import ml
 from preprocessing import process_test_data
 
@@ -22,24 +22,27 @@ def generate_mock_eyetracking_data(file_path, num_points):
         y = random.uniform(0, 1080)  # Assuming screen height of 1080 pixels
 
         # Generate timestamp for each point
-        timestamp = current_time + i  # Incrementing by 10 milliseconds
+        timestamp = current_time + 0.001 * i  # Incrementing by 10 milliseconds
         eyetracking_data.append({"x": x, "y": y, "timestamp": timestamp})
 
-    with open(file_path, 'w') as file:
-        json.dump(eyetracking_data, file)
+    data = pd.DataFrame(eyetracking_data)
+    data.to_csv("mock_data.csv")
 
     return eyetracking_data
 
 
 mock_file_path = "./mock_eyetracking_data.json"
 
-train_data = pd.read_csv("training/CSVs/eyetracking_by_event.csv")
-test_data_path = "eyetracking/test-data/gaze_data.csv"
+# train_data = pd.read_csv("training/CSVs/eyetracking_by_event.csv")
+test_data_path = "eye_tracking_test.csv"
 
 
 def main():
-    test_windows(test_data_path, 5)
-    # print((198220010446-194350979093)/1000000/60)
+    # print((667/2) - 0.6379310344827587 * 667)
+    process_test_data()
+    data = pd.read_csv(test_data_path)
+    data = data.loc[(data["Participant"] == "p1") & (data["Paragraph"] == 1)]
+    windows(data, 5)
 
 
 if __name__ == "__main__":

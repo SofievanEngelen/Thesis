@@ -20,6 +20,7 @@ def ml(data):
     imputer = KNNImputer(n_neighbors=2, weights='uniform')
     X = imputer.fit_transform(X, y)
 
+    train_p, test_p = train_test_split(data['Participant'])
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.2)
 
     parameters = {'n_estimators': 60, 'max_depth': 1, 'learning_rate': 0.23}

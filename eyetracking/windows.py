@@ -4,11 +4,11 @@ import time
 import random
 
 import pandas as pd
+from IPython.core.display_functions import display
 
 
-def test_windows(file_path, window_size):
+def test_windows(data, window_size):
     moving_windows_dict = {}
-    data = pd.read_csv(file_path)
 
     # Simulate continuous monitoring and processing of eyetracking data
     for i in range(window_size - 1, len(data)):
@@ -37,21 +37,31 @@ def test_windows(file_path, window_size):
 
 
 # Function to implement moving windows
-def create_moving_window(starttime, eyetracking_data, window_size):
-    window = []
+def create_moving_window(starttime, data, window_size):
+    endtime = starttime + window_size
 
-    endtime = starttime + window_size * 1000
+    window_data = data.loc[(data["time"] >= starttime) & (data["time"] <= endtime)]
 
-    for i in range(1000):
-        while starttime < eyetracking_data[i]["timestamp"] <= endtime:
-            window.append({"x": eyetracking_data[i]["x"], "y": eyetracking_data[i]["y"]})
-        if eyetracking_data[i]["timestamp"] > endtime:
-            return window
+    print(f"Start time = {starttime}: ")
+    display(window_data)
+
+    return window_data
+
+    # for i in range(1000):
+    #     while starttime < data[i]["timestamp"] <= endtime:
+    #         window.append({"x": data[i]["x"], "y": data[i]["y"]})
+    #     if data[i]["timestamp"] > endtime:
+    #         return window
 
 
-def windows(file_path, window_size):
-    data = pd.read_csv(file_path)
-
+def windows(data, window_size):
+    starttime = 0
+    while True:
+        endtime = starttime + window_size
+        window_data = data.loc[(data["time"] >= starttime) & (data["time"] <= endtime)]
+        display(window_data)
+        time.sleep(1)
+        starttime += 1
 
 
 
