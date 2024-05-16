@@ -7,9 +7,9 @@ from IPython.core.display_functions import display
 from sklearn.preprocessing import OneHotEncoder
 
 # Define file paths
-timing_data_dir = "training-data/Data Timings"
-participant_data_dir = "training-data/Myrthe Faber/dat"
-scores_path = "training-data/XML_data_cleaned.Rda"
+timing_data_dir = "training/training-data/Data Timings"
+participant_data_dir = "training/training-data/Myrthe Faber/dat"
+scores_path = "training/training-data/XML_data_cleaned.Rda"
 
 # Define participants to be rejected
 rejected_participants = {"p21", "p30", "p39", "p51", "p64", "p66", "p69", "p71", "p74", "p93"}
@@ -156,10 +156,10 @@ def process_train_participants(p_dir: str = None) -> None:
     userevents_df['Start'] = userevents_df['Start'].astype(int)
 
     # Export dataframe to csv
-    fixations_df.to_csv("input files/fixations.csv")
-    saccades_df.to_csv("input files/saccades.csv")
-    blinks_df.to_csv("input files/blinks.csv")
-    userevents_df.to_csv("input files/userevents.csv")
+    fixations_df.to_csv("training/CSVs/input files/fixations.csv")
+    saccades_df.to_csv("training/CSVs/input files/saccades.csv")
+    blinks_df.to_csv("training/CSVs/input files/blinks.csv")
+    userevents_df.to_csv("training/CSVs/input files/userevents.csv")
 
 
 def process_scores_file(r_path: str = None) -> None:
@@ -177,11 +177,22 @@ def process_scores_file(r_path: str = None) -> None:
     scores_file = pyreadr.read_r(r_path)
 
     scores_df = scores_file["XML_data_cleaned"]
+    # display(scores_df)
 
-    scores = scores_df["Thought_Type"].astype(int).values.reshape(-1, 1)
-    scores_df["Thought_Type"] = OneHotEncoder().fit_transform(scores).toarray()
+    # scores = scores_df["Thought_Type"]
+    # scores_df[["Thought_Type"]] = OneHotEncoder().fit_transform(scores.values.reshape(-1, 1)).toarray()
 
-    scores_df[['Participant', 'Probe', 'Thought_Type']].to_csv("input files/scores.csv")
+    # y = OneHotEncoder().fit_transform(y_class.values.reshape(-1, 1)).toarray()
+
+    encoded_scores = OneHotEncoder().fit_transform(scores_df["Thought_Type"].values.reshape(-1, 1)).toarray()
+    encoded_columns = pd.DataFrame(encoded_scores,
+                                   columns=[f"MW-score-{i + 1}" for i in range(encoded_scores.shape[1])])
+    scores_df = pd.concat([scores_df, encoded_columns], axis=1)
+    scores_df.drop(columns=["Thought_Type"], inplace=True)
+    display(scores_df.loc[:, ~scores_df.columns.isin(['Textual_Trigger', 'Personal_Connection', 'Absorption'])])
+
+    (scores_df.loc[:, ~scores_df.columns.isin(['Thought_Description', 'Textual_Trigger', 'Personal_Connection', 'Absorption'])]
+     .to_csv("training/CSVs/input files/scores.csv"))
 
 
 def process_timings_file(file_path) -> pd.DataFrame:
@@ -291,7 +302,7 @@ def process_train_timings(t_dir=None) -> None:
     # Concatenate timings dataframes
     timings_df = pd.concat(timings, ignore_index=True)
 
-    timings_df.to_csv("input files/timings.csv")
+    timings_df.to_csv("training/CSVs/input files/timings.csv")
 
 
 def process_test_data():
@@ -303,6 +314,7 @@ def process_test_data():
 
     # Participants
     unique_participants = data['Participant'].unique()
+    print(len(unique_participants))
 
     for p in ['593890eac6aa16000101f037']:
         # Rename participants
@@ -320,4 +332,4 @@ def process_test_data():
     data["y"] = (data["WinHeight"] / 2) - data["y"] * data["WinHeight"]
     data.drop(['WinWidth', 'WinHeight', 'Paragraph'], axis=1)
 
-    data.to_csv("eye_tracking_test.csv")
+    data.to_csv("training/eye_tracking_test.csv")

@@ -7,8 +7,9 @@ from IPython.core.display_functions import display
 
 from eyetracking.event_detection import detect_fixations
 from eyetracking.windows import windows
-from training.ML import ml
-from preprocessing import process_test_data
+from training.ML import train_model
+from preprocessing import process_test_data, process_scores_file
+from training.timings import agg_by_window
 
 
 # Function to generate mock eyetracking data with timestamps
@@ -39,10 +40,20 @@ test_data_path = "eye_tracking_test.csv"
 
 def main():
     # print((667/2) - 0.6379310344827587 * 667)
-    process_test_data()
-    data = pd.read_csv(test_data_path)
-    data = data.loc[(data["Participant"] == "p1") & (data["Paragraph"] == 1)]
-    windows(data, 5)
+
+    # Windows / event detection
+    # process_test_data()
+    # data = pd.read_csv(test_data_path)
+    # data = data.loc[(data["Participant"] == "p1") & (data["Paragraph"] == 1)]
+    # windows(data, 5)
+
+    # Data preprocessing
+    # process_scores_file()
+    # agg_by_window()
+
+    # ML
+    data = pd.read_csv('training/eyetracking_by_event.csv')
+    train_model(data)
 
 
 if __name__ == "__main__":
