@@ -3,4 +3,5 @@ eye_tracking_test.csv
 mock_eyetracking_data.json
 training/CSVs
 training/training-data
+training/eyetracking_by_event.csv
 eyetracking/test-data
