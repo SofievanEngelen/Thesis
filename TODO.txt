@@ -1,0 +1,18 @@
+just webcam data
+- replicate their thing (gaze features)
+- windowed approach (avg per participant)
+
+354 participants, 7 probes pp
+
+training: ik wil ML models op windows van 20 seconden trainen,
+maar dan heb ik per 20 seconden een probe nodig terwijl de data
+maar 7 probes heeft (ong. elke 45 seconden)
+
+-> misschien ML models alleen trainen op 20 seconden voorafgaand aan probes?
+    -> 2478 training samples (247 val, 247 test, 1984 train)
+    -> +- 13 extra test data per persoon?
+
+-> andere artikel wat Aaron gestuurd had (Wong et al., 2023) heeft andere data,
+    maar ongeveer hetzelfde concept (precies hetzelfde??)
+    -> 301 extra training samples
+    -> 2779 training samples in totaal (277 val, 277 test, 2225 train)

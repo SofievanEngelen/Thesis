@@ -1,4 +1,5 @@
 import pandas as pd
+from IPython.core.display_functions import display
 from sklearn.dummy import DummyRegressor
 from sklearn.impute import KNNImputer
 from sklearn.linear_model import LinearRegression
@@ -9,29 +10,33 @@ from xgboost import XGBRegressor
 
 def train_model(data):
     X, y = (data.loc[:, ~data.columns.isin(['MW-score-1', 'MW-score-2', 'MW-score-3', 'MW-score-4',
-                                            'MW-score-5', 'MW-score-6', 'MW-score-7', 'Participant', 'index',
+                                            'MW-score-5', 'MW-score-6', 'MW-score-7', 'index',
                                             'Probe'])],
             data.loc[:, data.columns.isin(
-                ['MW-score-1', 'MW-score-2', 'MW-score-3', 'MW-score-4', 'MW-score-5', 'MW-score-6', 'MW-score-7'])])
+                ['Participant', 'MW-score-1', 'MW-score-2', 'MW-score-3', 'MW-score-4', 'MW-score-5', 'MW-score-6', 'MW-score-7'])])
 
-    # # Initialize GroupShuffleSplit
-    gss = GroupShuffleSplit(n_splits=5, test_size=0.2, random_state=42)
-    #
-    # # Perform the split
-    train_indices, test_indices = next(gss.split(data, groups=data['Participant']))
-    #
-    # Impute missing values
-    imputer = KNNImputer(n_neighbors=2, weights='uniform')
-    X = imputer.fit_transform(X, y)
-    X = pd.DataFrame(X)
+    # # # Initialize GroupShuffleSplit
+    # gss = GroupShuffleSplit(n_splits=5, test_size=0.2, random_state=42)
+    # #
+    # # # Perform the split
+    # train_indices, test_indices = next(gss.split(data, groups=data['Participant']))
+    # #
+    # # Impute missing values
+    # imputer = KNNImputer(n_neighbors=2, weights='uniform')
+    # X = imputer.fit_transform(X, y)
+    # X = pd.DataFrame(X)
 
-    # Split the data based on the indices
-    X_train, X_test = X.iloc[train_indices], X.iloc[test_indices]
-    y_train, y_test = y.iloc[train_indices], y.iloc[test_indices]
+    # print(X)
+    #
+    # # Split the data based on the indices
+    # X_train, X_test = X.iloc[train_indices], X.iloc[test_indices]
+    # y_train, y_test = y.iloc[train_indices], y.iloc[test_indices]
 
     # #
-    # # train_p, test_p = train_test_split(data['Participant'])
+    # train_p, test_p = train_test_split(data['Participant'])
     # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.2)
+
+    # print(X_train.head(), X_test.head())
     # X_train = X[297:]
     # X_test = X[:297]
     # y_train = y[297:]
@@ -95,12 +100,15 @@ def train_model(data):
     # parameters = {'n_estimators': [60], 'max_depth': [1], 'learning_rate': [0.23]}
 
     #
-    # unique_participants = data['Participant'].unique()
-    # train_p, test_p = train_test_split(unique_participants, test_size=0.2, random_state=42)
-    # # X_train, X_test, y_train, y_test = (X.loc[X['Participant'].isin(train_p)],
-    # #                                     X.loc[X['Participant'].isin(test_p)],
-    # #                                     y.loc[y['Participant'].isin(train_p)],
-    # #                                     y.loc[y['Participant'].isin(test_p)])
+    unique_participants = data['Participant'].unique()
+    train_p, test_p = train_test_split(unique_participants, test_size=0.01, random_state=42)
+    print(train_p, test_p)
+    X_train, X_test, y_train, y_test = (X.loc[X['Participant'].isin(train_p)],
+                                        X.loc[X['Participant'].isin(test_p)],
+                                        y.loc[y['Participant'].isin(train_p)],
+                                        y.loc[y['Participant'].isin(test_p)])
+
+    display(X_train, X_test)
     #
     # train_data = data[data['Participant'].isin(train_p)]
     # test_data = data[data['Participant'].isin(test_p)]
@@ -125,15 +133,15 @@ def train_model(data):
 
     # display(X_test, y_test)
 
-    # X_train.drop(['Participant'], axis=1, inplace=True)
-    # y_train.drop(['Participant'], axis=1, inplace=True)
-    # X_test.drop(['Participant'], axis=1, inplace=True)
-    # y_test.drop(['Participant'], axis=1, inplace=True)
+    X_train.drop(['Participant'], axis=1, inplace=True)
+    y_train.drop(['Participant'], axis=1, inplace=True)
+    X_test.drop(['Participant'], axis=1, inplace=True)
+    y_test.drop(['Participant'], axis=1, inplace=True)
 
     # # Impute missing values
-    # imputer = KNNImputer(n_neighbors=2, weights='uniform')
-    # X_train = imputer.fit_transform(X_train, y_train)
-    # X_test = imputer.fit_transform(X_test, y_test)
+    imputer = KNNImputer(n_neighbors=2, weights='uniform')
+    X_train = imputer.fit_transform(X_train, y_train)
+    X_test = imputer.fit_transform(X_test, y_test)
 
     # print(X_train.shape)
     # print(X_test.shape)
@@ -150,12 +158,7 @@ def train_model(data):
 
     # n_estimators=108, max_depth=2, learning_rate=0.01
     # Create, fit, and evaluate XGBoost model
-    xgb_reg = XGBRegressor(eval_metric=['rmse', 'mae', 'mape'],
-                           objective='reg:squarederror'
-                           )
-    # n_estimators=108,
-    # max_depth=2,
-    # learning_rate=0.01)
+    xgb_reg = XGBRegressor(eval_metric=['rmse', 'mae', 'mape'], objective='reg:squarederror')
     xgb_reg = GridSearchCV(estimator=xgb_reg, param_grid=parameters, cv=10, n_jobs=-1)
     xgb_reg.fit(X_train, y_train)
     y_xgb_pred = xgb_reg.predict(X_test)

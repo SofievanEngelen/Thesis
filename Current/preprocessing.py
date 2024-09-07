@@ -316,7 +316,8 @@ def process_test_data():
     unique_participants = data['Participant'].unique()
     print(len(unique_participants))
 
-    for p in ['593890eac6aa16000101f037']:
+    for p in unique_participants:
+        print(p)
         # Rename participants
         new_p = f"p{list(unique_participants).index(p) + 1}"
         data['Participant'] = data['Participant'].str.replace(p, new_p)
@@ -324,6 +325,7 @@ def process_test_data():
         # Cumulative time over all paragraphs
         prev_time = 0
         for para in data['Paragraph'].unique():
+            print(para)
             data.loc[(data['Participant'] == new_p) & (data['Paragraph'] == para), 'time'] += prev_time
             prev_time = data.loc[(data['Participant'] == new_p) & (data['Paragraph'] == para), 'time'].iloc[-1]
 
@@ -333,3 +335,5 @@ def process_test_data():
     data.drop(['WinWidth', 'WinHeight', 'Paragraph'], axis=1)
 
     data.to_csv("training/eye_tracking_test.csv")
+
+123
