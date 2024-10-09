@@ -20,7 +20,7 @@ def start_sliding_window(participant: int, data: DataFrame, window_size: int):
         window_data.loc[:, 'trial'] = start_time / 1000
 
         fixation_df = detect_fixations(window_data)
-
+        # fixation_df.to_csv(f'fixations_p{participant}')
 
         start_time += 1000
 

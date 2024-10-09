@@ -3,8 +3,10 @@
 # import time
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot as plt
+
 from windows import start_sliding_window
-from preprocessing import preprocess_data
+from preprocessing import preprocess_gaze_data
 
 
 def plot_gazes(participants, AOI_df, df):
@@ -30,7 +32,7 @@ def plot_gazes(participants, AOI_df, df):
 
 def main():
     # Preprocessing
-    # preprocess_data("./original-test-data/raw_gaze_data.csv", to_file='processed_gaze_data.csv')
+    # preprocess_gaze_data("./original-test-data/raw_gaze_data.csv", to_file='processed_gaze_data.csv')
 
     # Windows
     gaze_data = pd.read_csv("processed_gaze_data.csv")
