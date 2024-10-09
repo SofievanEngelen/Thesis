@@ -307,7 +307,7 @@ def process_train_timings(t_dir=None) -> None:
     timings_df.to_csv("training/CSVs/input files/timings.csv")
 
 
-def process_data(filepath: str, verbose: bool = True, to_file: str = None) -> pd.DataFrame | None:
+def preprocess_data(filepath: str, verbose: bool = True, to_file: str = None) -> pd.DataFrame | None:
     if verbose:
         print(f"Loading data from {filepath}...")
 

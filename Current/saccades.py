@@ -163,13 +163,13 @@ robjects.r('''
 ''')
 
 # Access the R function as a Python object
-detect_fixations = robjects.globalenv['detect.fixations']
+detect_fixations_func = robjects.globalenv['detect.fixations']
 
 
 # Define the Python function that calls the R function
-def call_detect_fixations(df: pd.DataFrame) -> pd.DataFrame:
+def detect_fixations(df: pd.DataFrame) -> pd.DataFrame:
     r_df = robjects.pandas2ri.py2rpy(df)  # Convert Pandas to R DataFrame
-    result_r_df = detect_fixations(r_df)  # Call the R function
+    result_r_df = detect_fixations_func(r_df)  # Call the R function
 
     # Convert the R DataFrame back to a Pandas DataFrame
     result_df = pandas2ri.rpy2py(result_r_df)
