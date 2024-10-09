@@ -1,13 +1,2 @@
-test.csv
 mock_eyetracking_data.json
-training/CSVs
-training/training-data
-training/eyetracking_by_event.csv
-eyetracking/test-data
-Current/original-test-data
-Current/gaze_data_processed.csv
-Current/sacdet_example_fixations.csv
-Current/test.csv
-Current/weighted_averages.csv
-Current/eye_tracking_test.csv
-Current/original-test-data/sacdet_gaze_data.csv
+*.csv
