@@ -1,43 +1,48 @@
-import json
-import random
-import time
-
+# import json
+# import random
+# import time
+#
+import numpy as np
 import pandas as pd
-from IPython.core.display_functions import display
 
-# from eyetracking.event2 import detect_fixations
-# from eyetracking.windows import windows
-# from training.ML import train_model
-# from preprocessing import process_test_data, process_scores_file
-# from training.timings import agg_by_window
+# from IPython.core.display_functions import display
+#
+# # from eyetracking.event2 import detect_fixations
+# # from eyetracking.windows import windows
+# # from training.ML import train_model
+# # from preprocessing import process_test_data, process_scores_file
+# # from training.timings import agg_by_window
 from windows import sliding_window
+from preprocessing import process_data
 
-
-# Function to generate mock eyetracking data with timestamps
-def generate_mock_eyetracking_data(file_path, num_points):
-    eyetracking_data = []
-    current_time = 0  # Current time in seconds
-
-    for i in range(num_points):
-        # Generate random eyetracking coordinates
-        x = random.uniform(0, 1920)  # Assuming screen width of 1920 pixels
-        y = random.uniform(0, 1080)  # Assuming screen height of 1080 pixels
-
-        # Generate timestamp for each point
-        timestamp = current_time + 0.001 * i  # Incrementing by 10 milliseconds
-        eyetracking_data.append({"x": x, "y": y, "timestamp": timestamp})
-
-    data = pd.DataFrame(eyetracking_data)
-    data.to_csv("mock_data.csv")
-
-    return eyetracking_data
-
-
-mock_file_path = "./mock_eyetracking_data.json"
-
-# train_data = pd.read_csv("training/CSVs/eyetracking_by_event.csv")
-# test_data_path = "eye_tracking_test.csv"
-
+# from attention_analysis import PCA_analysis, logistic_regression, check_attention_tut_correlation
+#
+#
+# # Function to generate mock eyetracking data with timestamps
+# def generate_mock_eyetracking_data(file_path, num_points):
+#     eyetracking_data = []
+#     current_time = 0  # Current time in seconds
+#
+#     for i in range(num_points):
+#         # Generate random eyetracking coordinates
+#         x = random.uniform(0, 1920)  # Assuming screen width of 1920 pixels
+#         y = random.uniform(0, 1080)  # Assuming screen height of 1080 pixels
+#
+#         # Generate timestamp for each point
+#         timestamp = current_time + 0.001 * i  # Incrementing by 10 milliseconds
+#         eyetracking_data.append({"x": x, "y": y, "timestamp": timestamp})
+#
+#     data = pd.DataFrame(eyetracking_data)
+#     data.to_csv("mock_data.csv")
+#
+#     return eyetracking_data
+#
+#
+# mock_file_path = "./mock_eyetracking_data.json"
+#
+# # train_data = pd.read_csv("training/CSVs/eyetracking_by_event.csv")
+# # test_data_path = "gaze_data_processed.csv"
+#
 event_samples = pd.DataFrame(
     [{'x': 1543.3067419981896, 'y': 378.49673204121257, 'trial': 1, 'time': 0.05},
      {'x': 1693.4370973211091, 'y': 255.85506473596905, 'trial': 1, 'time': 0.25},
@@ -111,19 +116,43 @@ event_samples = pd.DataFrame(
      {'x': 870.5354888882188, 'y': 521.9416777623795, 'trial': 1, 'time': 17.5}])
 
 
+def plot_gazes(participants, AOI_df, df):
+    plt.figure(figsize=(10, 6))
+
+    for i, participant in enumerate(participants):
+        print(i, participant)
+        participant_data = df.loc[df['Participant'] == participant]
+        print(participant_data.head())
+        if not participant_data.empty:
+            num = AOI_df.loc[(AOI_df['Participant'] == participant), 'AOIGazes'].values[0]
+            plt.scatter(participant_data['x'], participant_data['y'], label=f"{participant}: {num}", s=10)
+
+    # Plot the gaze data to visualize
+    plt.title(f"Gaze Points P{participants}")
+    plt.xlabel("X")
+    plt.ylabel("Y")
+    plt.legend(title="Participants")
+    plt.viridis()
+    plt.grid()
+    plt.show()
+
+
 def main():
-    # Event detection
-    # fixations = detect_fixations(event_samples)
-    # print(fixations.head())
+    # gaze_data = pd.read_csv('/Users/sofie/dev/Python/Uni/Thesis/R-microsaccades/saccades/data/sacdet_example.csv')[:20]
+    # gaze_data = pd.read_csv('./original-test-data/raw_gaze_data.csv')
+    # gaze_data = gaze_data[gaze_data['Participant'] in ["596e1af7a09655000197d4bb", "593890eac6aa16000101f037"]]
+    # gaze_data.to_csv('gaze_data_p-12_para-all.csv', index=False)
+    # Call the R function with different numbers
+    # res1 =   # equivalent to add_nums(4, 1)
+    # res1.to_csv('./sacdet_example_fixations.csv', index=False)
 
     # Windows
-    # process_test_data()
-    # data = pd.read_csv(test_data_path)
-    # data = data.loc[(data["Participant"] == "p1") & (data["Paragraph"] == 1)]
-    # windows(data, 5)
-
-    elements = pd.read_csv("./eye_tracking_test.csv")
-    sliding_window('p1', data=elements, window_size=20)
+    # print("test")
+    # elements = process_data("gaze_data_p-12_para-all.csv", to_file='gaze_data_processed1.csv')
+    elements = process_data("./original-test-data/raw_gaze_data.csv", to_file='gaze_data_processed_final.csv')
+    # elements = pd.read_csv("gaze_data_processed1.csv")
+    # print(elements.head())
+    # sliding_window(1, data=elements, window_size=20000)
 
     # Data preprocessing
     # process_scores_file()

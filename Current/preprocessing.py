@@ -1,3 +1,4 @@
+import operator
 import os
 import re
 
@@ -191,7 +192,8 @@ def process_scores_file(r_path: str = None) -> None:
     scores_df.drop(columns=["Thought_Type"], inplace=True)
     display(scores_df.loc[:, ~scores_df.columns.isin(['Textual_Trigger', 'Personal_Connection', 'Absorption'])])
 
-    (scores_df.loc[:, ~scores_df.columns.isin(['Thought_Description', 'Textual_Trigger', 'Personal_Connection', 'Absorption'])]
+    (scores_df.loc[:,
+     ~scores_df.columns.isin(['Thought_Description', 'Textual_Trigger', 'Personal_Connection', 'Absorption'])]
      .to_csv("training/CSVs/input files/scores.csv"))
 
 
@@ -305,35 +307,65 @@ def process_train_timings(t_dir=None) -> None:
     timings_df.to_csv("training/CSVs/input files/timings.csv")
 
 
-def process_test_data():
-    data = pd.read_csv("./eyetracking/test-data/gaze_data.csv")
-    score_data = pd.read_csv("./eyetracking/test-data/Probe_data.csv")
+def process_data(filepath: str, verbose: bool = True, to_file: str = None) -> pd.DataFrame | None:
+    if verbose:
+        print(f"Loading data from {filepath}...")
 
-    # Merge scores with gaze data, by probe
-    # probes after paragraphs 4, 10, 15, 20, 26, 30, and 36
+    data = pd.read_csv(filepath)
+
+    ppt_data = data.drop(columns=['WinWidth', 'WinHeight', 'x', 'y'])
+
+    if verbose:
+        print(f"Data loaded.")
 
     # Participants
-    unique_participants = data['Participant'].unique()
-    print(len(unique_participants))
+    unique_participants = ppt_data['Participant'].unique()
+    if verbose:
+        print(f"Number of unique participants: {len(unique_participants)}")
+
+    # Create a mapping for renaming participants
+    participant_mapping = {p: str(i + 1) for i, p in enumerate(unique_participants)}
+
+    # Rename participants using the mapping
+    ppt_data['Participant'] = ppt_data['Participant'].replace(participant_mapping)
+
+    if verbose:
+        print("Participants renamed.")
+
+    # Iterate through unique participants
+    time_column = []
 
     for p in unique_participants:
-        print(p)
-        # Rename participants
-        new_p = f"p{list(unique_participants).index(p) + 1}"
-        data['Participant'] = data['Participant'].str.replace(p, new_p)
+        if verbose:
+            print(f"Calculating total time for participant {participant_mapping[p]}...")
+
+        # Filter rows for the current participant
+        participant_data = ppt_data[ppt_data['Participant'] == participant_mapping[p]]
 
         # Cumulative time over all paragraphs
         prev_time = 0
-        for para in data['Paragraph'].unique():
-            print(para)
-            data.loc[(data['Participant'] == new_p) & (data['Paragraph'] == para), 'time'] += prev_time
-            prev_time = data.loc[(data['Participant'] == new_p) & (data['Paragraph'] == para), 'time'].iloc[-1]
 
-    # Convert eye coordinates to pixels
-    data["x"] = data["x"] * data["WinWidth"] + (data["WinWidth"] / 2)
-    data["y"] = (data["WinHeight"] / 2) - data["y"] * data["WinHeight"]
-    data.drop(['WinWidth', 'WinHeight', 'Paragraph'], axis=1)
+        for para in ppt_data['Paragraph'].unique():
+            participant_data.loc[participant_data['Paragraph'] == para, 'time'] += prev_time
 
-    data.to_csv("training/eye_tracking_test.csv")
+            prev_time = participant_data.loc[participant_data['Paragraph'] == para, 'time'].iloc[-1]
 
-123
+        # Add the total time to the new time column
+        time_column += list(participant_data['time'])
+
+    if verbose:
+        print("Cumulative time calculated.")
+
+    data['Participant'] = ppt_data['Participant']
+    data['Paragraph'] = ppt_data['Paragraph']
+    data['time'] = list(map(lambda x: x*1000, time_column))
+
+    if verbose:
+        print("Processing complete.")
+
+    if to_file:
+        data.to_csv(to_file, index=False)
+        if verbose:
+            print("Saving complete.")
+    else:
+        return data
