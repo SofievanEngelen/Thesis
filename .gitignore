@@ -1,2 +1,8 @@
+training/CSVs
+training/training-data
+Current/original-test-data
+eyetracking/test-data
+
 mock_eyetracking_data.json
+
 *.csv
