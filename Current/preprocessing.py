@@ -55,6 +55,11 @@ def preprocess_gaze_data(filepath: str, verbose: bool = True, to_file: str = Non
     :return: If `to_file` is None, returns the processed DataFrame. Otherwise,
         it saves the processed DataFrame to the specified filepath and then returns it.
     """
+    if os.path.isfile(to_file):
+        if verbose:
+            print("That file already exists, reading from existing file...")
+        return pd.read_csv(to_file)
+
     if verbose:
         print(f"Loading data from {filepath}...")
 
