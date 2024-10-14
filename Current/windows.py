@@ -20,7 +20,7 @@ def create_window(df: pd.DataFrame, start_time: int, end_time: int) -> pd.DataFr
     window_data = df[(df['time'] > start_time) & (df['time'] < end_time)]
 
     # set trial to  start_time in seconds
-    window_data.loc[:, 'trial'] = start_time / 1000
+    window_data.loc[:, 'trial'] = int(start_time / 1000)
 
     # detect gaze events in window data
     # event_df = detect_fixations(window_data)
@@ -61,13 +61,14 @@ def training_windows(df: pd.DataFrame, window_size: int, to_file: str = None) ->
     """
         Generate training data using sliding windows from paragraphs of interest.
 
-        :param filepath: The path to the CSV file containing the data.
+        :param df: Dataframe containing participant data.
         :param window_size: The size of the sliding window (in milliseconds).
-        :param to_file: The path to save the resulting DataFrame. If the file already exists, the function will read from it.
+        :param to_file: The path to save the resulting DataFrame. If the file already exists, the function will read
+        from it.
 
         :return: A DataFrame containing training data with detected fixations in each window.
     """
-    if os.path.isfile(to_file):
+    if to_file and os.path.isfile(to_file):
         return pd.read_csv(to_file)
 
     probe_paragraphs = [4, 10, 15, 20, 26, 30, 36]
@@ -76,6 +77,7 @@ def training_windows(df: pd.DataFrame, window_size: int, to_file: str = None) ->
 
     # find the last entry of the paragraph = endtime
     for paragraph in probe_paragraphs:
+        print(paragraph)
         end_time = df.loc[df['Paragraph'] == paragraph, 'time'].iloc[-1]
         start_time = end_time - window_size
 
