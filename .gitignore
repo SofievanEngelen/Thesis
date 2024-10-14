@@ -1,8 +1,11 @@
 training/CSVs
 training/training-data
 Current/original-test-data
+Current/processed-data
+Current/other-data
 eyetracking/test-data
 
 mock_eyetracking_data.json
 
+*.json
 *.csv
