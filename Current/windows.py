@@ -4,9 +4,10 @@ import time
 import pandas as pd
 from IPython.core.display_functions import display
 from pandas import DataFrame
+from feature_extraction import compute_features
 
 
-def create_window(df: pd.DataFrame, start_time: int, end_time: int) -> pd.DataFrame:
+def create_window(df: pd.DataFrame, start_time: int, end_time: int) -> (pd.DataFrame, pd.DataFrame):
     """
         Create a data window for a specific time range and process it to detect fixations.
 
@@ -23,9 +24,9 @@ def create_window(df: pd.DataFrame, start_time: int, end_time: int) -> pd.DataFr
     window_data.loc[:, 'trial'] = int(start_time / 1000)
 
     # detect gaze events in window data
-    # event_df = detect_fixations(window_data)
+    window_features = compute_features(window_data)
 
-    return window_data
+    return window_data, window_features
 
 
 def start_sliding_window(participant: int, data: DataFrame, window_size: int) -> None:
@@ -57,37 +58,44 @@ def start_sliding_window(participant: int, data: DataFrame, window_size: int) ->
             break
 
 
-def training_windows(df: pd.DataFrame, window_size: int, to_file: str = None) -> pd.DataFrame:
+def training_windows(df: pd.DataFrame, window_size: int, features: bool = False, to_file: str = None) -> pd.DataFrame:
     """
         Generate training data using sliding windows from paragraphs of interest.
 
         :param df: Dataframe containing participant data.
         :param window_size: The size of the sliding window (in milliseconds).
+        :param features: Boolean indicating whether to compute the features of the probe window
         :param to_file: The path to save the resulting DataFrame. If the file already exists, the function will read
         from it.
 
         :return: A DataFrame containing training data with detected fixations in each window.
     """
-    if to_file and os.path.isfile(to_file):
-        return pd.read_csv(to_file)
+    # if to_file and os.path.isfile(to_file):
+    #     return pd.read_csv(to_file)
 
     probe_paragraphs = [4, 10, 15, 20, 26, 30, 36]
 
-    train_window_data = []
+    # train_window_data = []
+    train_features_df = pd.DataFrame()
 
     # find the last entry of the paragraph = endtime
     for paragraph in probe_paragraphs:
-        print(paragraph)
         end_time = df.loc[df['Paragraph'] == paragraph, 'time'].iloc[-1]
         start_time = end_time - window_size
 
-        probe_df = create_window(df, start_time, end_time)
-        train_window_data.append(probe_df)
+        probe_df, features_df = create_window(df, start_time, end_time)
+        print(probe_df)
 
-    train_df = pd.concat(train_window_data)
+        # train_window_data.append(probe_df)
+        if train_features_df is None:
+            train_features_df = pd.DataFrame(features_df)
+        else:
+            train_features_df = pd.concat([train_features_df, features_df], ignore_index=True)
 
-    if to_file:
-        train_df.to_csv(to_file, index=False)
+    # train_df = pd.concat(train_window_data)
 
-    return train_df
+    # if to_file:
+    #     train_df.to_csv(to_file, index=False)
+
+    return train_features_df
 
