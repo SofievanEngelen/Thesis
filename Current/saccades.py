@@ -14,7 +14,7 @@ detect.and.process.events <- function(samples, lambda = 6, smooth.coordinates = 
   
   # Validate input columns
   if (!all(c("x", "y", "trial", "time") %in% colnames(samples))) {
-    stop("Input data frame needs columns 'x', 'y', 'trial', and 'time'.")
+    stop("Input data frame needs columns 'x_CC', 'y_CC', 'trial', and 'time'.")
   }
   
   # Check chronological order
@@ -23,8 +23,15 @@ detect.and.process.events <- function(samples, lambda = 6, smooth.coordinates = 
   }
   
   # Keep only necessary columns
-  samples <- samples %>% select(x, y, trial, time, Participant, Paragraph)
+  winwidth <- 1366
+  winheight <- 667
+  samples <- samples %>% select(x, y, trial, time)
   
+  samples$x_CC <- samples$x
+  samples$y_CC <- samples$y
+  samples$x <- samples$x_CC * winheight + (winwidth / 2)
+  samples$y <- (winheight / 2) - (samples$y_CC * winheight)
+    
   # Smooth coordinates if specified
   if (smooth.coordinates) {
     x <- samples$x[c(1, nrow(samples))]
@@ -54,21 +61,19 @@ detect.and.process.events <- function(samples, lambda = 6, smooth.coordinates = 
     dplyr::filter(event == "fixation") %>%
     reframe(
       trial = trial,
-      paragraph = paragraph,
-      participant = participant,
-      x = x,
-      y = y,
-      duration = end - start, # Duration
-      mad = sqrt(mad.x^2 + mad.y^2),  # Dispersion
+      x_CC = x_CC,
+      y_CC = y_CC,
+      x_pixel = x,
+      y_pixel = y,
+      duration = end - start,
+      dispersion = sqrt(mad.x^2 + mad.y^2)
     )
   
   blinks_df <- all_events %>%
     dplyr::filter(event == "blink") %>%
     reframe(
       trial = trial,
-      paragraph = paragraph,
-      participant = participant,
-      duration = end - start,
+      duration = end - start
     )
   
   # Return the processed data as a list
@@ -92,8 +97,8 @@ aggregate_and_label_events <- function(samples) {
   # Aggregate events
   events <- with(samples, data.frame(
     trial   = tapply(trial, fixation.id, function(x) x[1]),
-    paragraph = first(Paragraph),
-    participant = first(Participant),
+    x_CC    = tapply(x_CC, fixation.id, stats::median),
+    y_CC    = tapply(y_CC, fixation.id, stats::median),
     x       = tapply(x, fixation.id, stats::median),
     y       = tapply(y, fixation.id, stats::median),
     start   = tapply(time, fixation.id, min),
@@ -214,8 +219,6 @@ detect.and.process.saccades <- function(samples, lambda = 6) {
   samples$end_x <- NA
   samples$end_y <- NA
   samples$start_trial <- NA
-  samples$paragraph <- NA
-  samples$participant <- NA
 
   # Assign start times/coordinates
   samples$start_time[saccade_starts] <- samples$time[saccade_starts]
@@ -249,15 +252,7 @@ detect.and.process.saccades <- function(samples, lambda = 6) {
       
       saccade_list[[i]] <- data.frame(
         trial = samples$start_trial[start_idx],
-        paragraph = samples$Paragraph[start_idx],  
-        paragraph = samples$Participant[start_idx],
-        start_time = samples$start_time[start_idx],
-        end_time = samples$end_time[end_idx],
         duration = samples$end_time[end_idx] - samples$start_time[start_idx],
-        start_x = start_x,
-        start_y = start_y,
-        end_x = end_x,
-        end_y = end_y,
         amplitude = amplitude,
         angle = angle
       )
