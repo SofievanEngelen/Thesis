@@ -8,45 +8,26 @@ from IPython.core.display_functions import display
 from sklearn.preprocessing import OneHotEncoder
 
 
-def filter_event(data: pd.DataFrame, participant: str, event: str):
+def convert_cartesian_to_pixels(df):
     """
-    Filter specific eye movement events from the given DataFrame.
+    Convert Cartesian coordinates in a DataFrame to pixel coordinates.
 
-    Args:
-    data (pd.DataFrame): DataFrame containing eye movement events.
-    participant (str): Participant identifier.
-    event (str): Type of eye movement event to filter.
-
-    Returns:
-    pd.DataFrame: Filtered DataFrame containing only the specified eye movement events.
+    :param df: DataFrame with 'x' and 'y' columns.
+    :param winwidth: Screen width in pixels.
+    :param winheight: Screen height in pixels.
+    :return: DataFrame with 'x_pixel' and 'y_pixel' columns.
     """
-    # Filter events based on event type
-    match event:
-        case "Fixations":
-            pp_events = data.loc[data["v1"].isin(["Fixation L", "Fixation R"])].copy(deep=True)
-            pp_events.insert(1, "v1.5", "")
-            pp_events[['v1', 'v1.5']] = pp_events['v1'].str.split(' ', expand=True)
-        case "Saccades":
-            pp_events = data.loc[data["v1"].isin(["Saccade L", "Saccade R"])].copy(deep=True)
-            pp_events.insert(1, "v1.5", "")
-            pp_events[['v1', 'v1.5']] = pp_events['v1'].str.split(' ', expand=True)
-        case "Blinks":
-            pp_events = data.loc[data["v1"].isin(["Blink L", "Blink R"])].copy(deep=True)
-            pp_events.insert(1, "v1.5", "")
-            pp_events[['v1', 'v1.5']] = pp_events['v1'].str.split(' ', expand=True)
-        case "Userevents":
-            pp_events = data[data["v1"] == "UserEvent"].copy(deep=True)
-            pp_events["v5"] = [re.sub(pattern=r'# Message: ', repl='', string=list(pp_events["v5"])[i]) for i in
-                               range(len(pp_events["v5"]))]
+    # Apply the transformation formulas
+    df['x_pixel'] = df['x'] * df['WinHeight'] + (df['WinWidth'] / 2)
+    df['y_pixel'] = (df['WinHeight'] / 2) - (df['y'] * df['WinHeight'])
 
-    pp_events["Participant"] = participant
-
-    return pp_events
+    return df
 
 
 def preprocess_gaze_data(filepath: str, verbose: bool = True, to_file: str = None) -> pd.DataFrame:
     """
-    Preprocesses gaze data from a CSV file by renaming participants and calculating cumulative time for each paragraph.
+    Preprocesses gaze data from a CSV file by renaming participants, converting x and y from Carthesian coordinates to
+    pixels, and calculating cumulative time for each paragraph.
 
     :param filepath: Path to the CSV file containing gaze data.
     :param verbose:  If True, prints progress messages. Defaults to True.
@@ -100,10 +81,10 @@ def preprocess_gaze_data(filepath: str, verbose: bool = True, to_file: str = Non
 
             prev_time = participant_data.loc[participant_data['Paragraph'] == para, 'time'].iloc[-1]
 
-        # Add the total time to the new time column
+        # Add the values to the new columns
         time_column += list(participant_data['time'])
 
-    data['time'] = list(map(lambda x: x*1000, time_column))
+    data['time'] = list(map(lambda x: x * 1000, time_column))
 
     if verbose:
         print("Processing complete.")
