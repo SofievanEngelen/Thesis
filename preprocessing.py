@@ -26,12 +26,12 @@ def convert_cartesian_to_pixels(df):
 
 def preprocess_gaze_data(filepath: str, verbose: bool = True, to_file: str = None) -> pd.DataFrame:
     """
-    Preprocesses gaze data from a CSV file by renaming participants, converting x and y from Carthesian coordinates to
+    Preprocesses gaze Data from a CSV file by renaming participants, converting x and y from Carthesian coordinates to
     pixels, and calculating cumulative time for each paragraph.
 
-    :param filepath: Path to the CSV file containing gaze data.
+    :param filepath: Path to the CSV file containing gaze Data.
     :param verbose:  If True, prints progress messages. Defaults to True.
-    :param to_file: If provided, the processed data will be saved to this file instead of returned. Defaults to None.
+    :param to_file: If provided, the processed Data will be saved to this file instead of returned. Defaults to None.
 
     :return: If `to_file` is None, returns the processed DataFrame. Otherwise,
         it saves the processed DataFrame to the specified filepath and then returns it.
@@ -42,7 +42,7 @@ def preprocess_gaze_data(filepath: str, verbose: bool = True, to_file: str = Non
         return pd.read_csv(to_file)
 
     if verbose:
-        print(f"Loading data from {filepath}...")
+        print(f"Loading Data from {filepath}...")
 
     data = pd.read_csv(filepath)
 

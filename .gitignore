@@ -1,11 +1,12 @@
-training/CSVs
-training/training-data
-Current/original-test-data
-Current/processed-data
-Current/other-data
-eyetracking/test-data
+old stuff/training/CSVs
+old stuff/training/training-data
+old stuff/eyetracking/test-data
+old stuff/mock_eyetracking_data.json
+old stuff/attention_scores.csv
+old stuff/weighted_averages.csv
 
-mock_eyetracking_data.json
+Data/
+
 
 *.json
 *.csv

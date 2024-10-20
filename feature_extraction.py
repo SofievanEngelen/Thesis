@@ -4,7 +4,7 @@ import numpy as np
 from scipy.stats import kurtosis, skew
 from saccades import detect_events
 
-AOI_df = pd.read_csv('./original-data/aoi-boxes.csv', delimiter=';', decimal=',')
+AOI_df = pd.read_csv('./original-Data/aoi-boxes.csv', delimiter=';', decimal=',')
 
 
 # Helper function that computes statistics for a measure
@@ -12,7 +12,7 @@ def compute_statistics(series, variable_name):
     """
         Computes various statistical measures for a given pandas Series.
 
-        :param series: A pandas Series containing numerical data.
+        :param series: A pandas Series containing numerical Data.
         :param variable_name: The name of the variable to compute statistics for, for dictionary naming purposes.
         :return: A dictionary with statistical measures.
     """
@@ -32,10 +32,10 @@ def compute_features(gaze_data: pd.DataFrame) -> pd.DataFrame:
     """
         Computes global and local features from gaze data by detecting fixations, blinks, and saccades.
 
-        :param gaze_data: A pandas DataFrame containing gaze data.
+        :param gaze_data: A pandas DataFrame containing gaze Data.
         :return: A pandas DataFrame with computed features.
     """
-    # Detect events from gaze data
+    # Detect events from gaze Data
     fixation_df, saccade_df = detect_events(gaze_data)
     # print("Blinks: ", blink_df)
 

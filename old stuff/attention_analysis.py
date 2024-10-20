@@ -48,7 +48,7 @@ def logistic_regression(data):
 
 
 def check_attention_tut_correlation(data: DataFrame, attention_scores: DataFrame):
-    # Merge the overall attention scores with the original data
+    # Merge the overall attention scores with the original Data
     merged_data = data.merge(attention_scores, on='Participant')
 
     # Calculate the correlation between Overall_Attention_Score and TUT

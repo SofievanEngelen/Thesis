@@ -19,7 +19,7 @@ def train_model(data):
     # gss = GroupShuffleSplit(n_splits=5, test_size=0.2, random_state=42)
     # #
     # # # Perform the split
-    # train_indices, test_indices = next(gss.split(data, groups=data['Participant']))
+    # train_indices, test_indices = next(gss.split(Data, groups=Data['Participant']))
     # #
     # # Impute missing values
     # imputer = KNNImputer(n_neighbors=2, weights='uniform')
@@ -28,12 +28,12 @@ def train_model(data):
 
     # print(X)
     #
-    # # Split the data based on the indices
+    # # Split the Data based on the indices
     # X_train, X_test = X.iloc[train_indices], X.iloc[test_indices]
     # y_train, y_test = y.iloc[train_indices], y.iloc[test_indices]
 
     # #
-    # train_p, test_p = train_test_split(data['Participant'])
+    # train_p, test_p = train_test_split(Data['Participant'])
     # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.2)
 
     # print(X_train.head(), X_test.head())
@@ -110,8 +110,8 @@ def train_model(data):
 
     display(X_train, X_test)
     #
-    # train_data = data[data['Participant'].isin(train_p)]
-    # test_data = data[data['Participant'].isin(test_p)]
+    # train_data = Data[Data['Participant'].isin(train_p)]
+    # test_data = Data[Data['Participant'].isin(test_p)]
     #
     # X_train, y_train = (
     #     train_data.loc[:, ~train_data.columns.isin(['MW-score-1', 'MW-score-2', 'MW-score-3', 'MW-score-4',

@@ -24,7 +24,7 @@ def plot_gazes(participants, AOI_df, df):
             num = AOI_df.loc[(AOI_df['Participant'] == participant), 'AOIGazes'].values[0]
             plt.scatter(participant_data['x'], participant_data['y'], label=f"{participant}: {num}", s=10)
 
-    # Plot the gaze data to visualize
+    # Plot the gaze Data to visualize
     plt.title(f"Gaze Points P{participants}")
     plt.xlabel("X")
     plt.ylabel("Y")
@@ -37,16 +37,16 @@ def plot_gazes(participants, AOI_df, df):
 def main():
     pass
     # Preprocessing
-    # processed_gaze_data = preprocess_gaze_data(filepath="./original-data/raw_gaze_data.csv",
-    #                                            to_file='processed-data/processed_gaze_data.csv')
+    # processed_gaze_data = preprocess_gaze_data(filepath="./original-Data/raw_gaze_data.csv",
+    #                                            to_file='processed-Data/processed_gaze_data.csv')
 
     # Feature extraction
     test_window = pd.read_csv('window_data.csv')
     print(compute_features(test_window))
 
     # Training windows
-    # df = pd.read_csv('processed-data/processed_gaze_data.csv')
-    # training_windows(df, WINDOW_SIZE, to_file='processed-data/train_windows_features.csv')
+    # df = pd.read_csv('processed-Data/processed_gaze_data.csv')
+    # training_windows(df, WINDOW_SIZE, to_file='processed-Data/train_windows_features.csv')
     #     display(p_window_df)
     #     train_windows.append(p_window_df)
     #
@@ -66,11 +66,11 @@ def main():
     # print(compute_global_features(events_df, saccade_df))
 
     # Windows
-    # start_sliding_window(1, data=processed_gaze_data, window_size=WINDOW_SIZE)  # Window size in milliseconds => 20 seconds
+    # start_sliding_window(1, Data=processed_gaze_data, window_size=WINDOW_SIZE)  # Window size in milliseconds => 20 seconds
 
     # ML
-    # data = pd.read_csv('training/eyetracking_by_event.csv')
-    # train_model(data, model)
+    # Data = pd.read_csv('training/eyetracking_by_event.csv')
+    # train_model(Data, model)
 
 
 if __name__ == "__main__":

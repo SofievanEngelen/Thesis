@@ -14,7 +14,7 @@ detect.and.process.events <- function(samples, lambda = 6, pixels = FALSE, smoot
   
   # Validate input columns
   if (!all(c("x", "y", "trial", "time", "WinWidth", "WinHeight") %in% colnames(samples))) {
-    stop("Input data frame needs columns 'x_CC', 'y_CC', 'trial', 'time', 'WinWidth', and 'WinHeight'.")
+    stop("Input Data frame needs columns 'x_CC', 'y_CC', 'trial', 'time', 'WinWidth', and 'WinHeight'.")
   }
   
   # Check chronological order
@@ -76,7 +76,7 @@ detect.and.process.events <- function(samples, lambda = 6, pixels = FALSE, smoot
       duration = end - start
     )
   
-  # Return the processed data as a list
+  # Return the processed Data as a list
   return(list(fixations = fixations_df, blinks = blinks_df))
 }
 
@@ -95,7 +95,7 @@ aggregate_and_label_events <- function(samples) {
   samples$t2 <- with(samples, ifelse(is.na(t2), time, t2))
 
   # Aggregate events
-  events <- with(samples, data.frame(
+  events <- with(samples, Data.frame(
     trial   = tapply(trial, fixation.id, function(x) x[1]),
     x_CC    = tapply(x_CC, fixation.id, stats::median),
     y_CC    = tapply(y_CC, fixation.id, stats::median),
@@ -234,7 +234,7 @@ detect.and.process.saccades <- function(samples, lambda = 6) {
       amplitude <- sqrt((end_x - start_x)^2 + (end_y - start_y)^2)
       angle <- atan2(end_y - start_y, end_x - start_x) * (180 / pi)
       
-      saccade_list[[i]] <- data.frame(
+      saccade_list[[i]] <- Data.frame(
         trial = samples$start_trial[start_idx],
         duration = samples$end_time[end_idx] - samples$start_time[start_idx],
         amplitude = amplitude,
@@ -243,7 +243,7 @@ detect.and.process.saccades <- function(samples, lambda = 6) {
     }
   }
   
-  # Combine the saccade metrics into a data frame
+  # Combine the saccade metrics into a Data frame
   saccades_df <- do.call(rbind, saccade_list)
   
   return(saccades_df)

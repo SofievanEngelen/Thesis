@@ -113,7 +113,7 @@ def detect_saccades(samples, lam, smooth_saccades=False):
 
 def detect_fixations(samples, lam=6, smooth_coordinates=True, smooth_saccades=True):
     if not {"x", "y", "window", "timestamp"}.issubset(samples.columns):
-        raise ValueError("Input data frame needs columns 'x', 'y', 'window', and 'timestamp'.")
+        raise ValueError("Input Data frame needs columns 'x', 'y', 'window', and 'timestamp'.")
 
     if not all(samples.groupby('window')['timestamp'].apply(lambda x: all(x.diff().dropna() > 0))):
         raise ValueError("Samples need to be in chronological order within trial.")

@@ -2,14 +2,14 @@ import pandas as pd
 import numpy as np
 
 """
-#' Functions for the detection of fixations in raw eye-tracking data.
+#' Functions for the detection of fixations in raw eye-tracking Data.
 #'
 #' Offers a function for detecting fixations in a stream of eye
 #' positions recorded by an eye-tracker.  The detection is done using
 #' an algorithm for saccade detection proposed by Ralf Engbert and
 #' Reinhold Kliegl (see reference below).  Anything that happens
 #' between two saccades is considered to be a fixation.  This software
-#' is therefore not suited for data sets with smooth-pursuit eye
+#' is therefore not suited for Data sets with smooth-pursuit eye
 #' movements.
 #'
 #' @name saccades
@@ -27,14 +27,14 @@ import numpy as np
 NULL
 
 #' Samples of eye positions as recorded with an iViewX eye-tracker
-#' recording at approx. 250 Hz.  The data quality is low on purpose
+#' recording at approx. 250 Hz.  The Data quality is low on purpose
 #' and contains episodes of track-loss and blinks.
 #'
 #' @name samples
 #' @title Samples of Eye Positions as Recorded with an Eye-Tracker
-#' @docType data
+#' @docType Data
 #' @usage samples
-#' @format a data frame containing one line per sample.  The samples
+#' @format a Data frame containing one line per sample.  The samples
 #' are sorted in chronological order.  Time is given in milliseconds,
 #' x- and y-coordinates in screen pixels.
 #' @source Recorded with an iViewX Eye-Tracker by SMI at approximately
@@ -44,14 +44,14 @@ NULL
 NULL
 
 #' Fixations detected in a stream of raw eye positions.  The
-#' corresponding raw eye positions samples are found in the data frame
+#' corresponding raw eye positions samples are found in the Data frame
 #' \code{\link{samples}} also part of this package.
 #'
 #' @name fixations
 #' @title Fixations Detected in a Stream of Raw Positions
-#' @docType data
+#' @docType Data
 #' @usage fixations
-#' @format a data frame containing one line per fixation.  The
+#' @format a Data frame containing one line per fixation.  The
 #' fixations are sorted in chronological order.  Time is given in
 #' milliseconds, x- and y-coordinates in screen pixels.
 #' @source Recorded with an iViewX Eye-Tracker by SMI at approximately
@@ -60,12 +60,12 @@ NULL
 
 NULL
 
-#' Takes a data frame containing raw eye-tracking samples and returns a
-#' data frame containing fixations.
+#' Takes a Data frame containing raw eye-tracking samples and returns a
+#' Data frame containing fixations.
 #'
 #' @title Detect Fixations in a Stream of Raw Eye-Tracking Samples
-#' @param samples a data frame containing the raw samples as recorded
-#' by the eye-tracker.  This data frame has four columns:
+#' @param samples a Data frame containing the raw samples as recorded
+#' by the eye-tracker.  This Data frame has four columns:
 #' \describe{
 #'  \item{time:}{the time at which the sample was recorded}
 #'  \item{trial:}{the trial to which the sample belongs}
@@ -94,9 +94,9 @@ NULL
 #' @section Details: This function uses a velocity-based detection
 #' algorithm for saccades proposed by Engbert and Kliegl.  Anything
 #' between two saccades is considered to be a fixation.  Thus, the
-#' algorithm is not suitable for data sets containing episodes of
+#' algorithm is not suitable for Data sets containing episodes of
 #' smooth pursuit eye movements.
-#' @return a data frame containing the detected fixations.  This data
+#' @return a Data frame containing the detected fixations.  This Data
 #' frame has the following columns:
 #'  \item{trial}{the trial to which the fixation belongs}
 #'  \item{start}{the time at which the fixation started}
@@ -121,7 +121,7 @@ NULL
 #' \code{\link{calculate.summary}}
 #' @export
 #' @examples
-#' data(samples)
+#' Data(samples)
 #' head(samples)
 #' fixations <- detect.fixations(samples)
 #' head(fixations)
@@ -135,7 +135,7 @@ NULL
 detect.fixations <- function(samples, lambda=6, smooth.coordinates=FALSE, smooth.saccades=TRUE) {
 
   if (! all(c("x", "y", "trial", "time") %in% colnames(samples)))
-    stop("Input data frame needs columns 'x', 'y', 'trial', and 'time'.")
+    stop("Input Data frame needs columns 'x', 'y', 'trial', and 'time'.")
 
   if (! all(with(samples, tapply(time, trial, function(x) all(diff(x) > 0)))))
     stop("Samples need to be in chronological order within trial.")
@@ -176,7 +176,7 @@ detect.fixations <- function(samples, lambda=6, smooth.coordinates=FALSE, smooth
 def detect_fixations(samples: pd.DataFrame, lambd: int = 6, smooth_coordinates: bool = False,
                      smooth_saccades: bool = True) -> pd.DataFrame:
     if not all([col in samples.columns for col in ["x", "y", "trial", "time"]]):
-        raise ValueError("Input data frame needs columns 'x', 'y', 'trial', and 'time'.")
+        raise ValueError("Input Data frame needs columns 'x', 'y', 'trial', and 'time'.")
 
     if not all([all(np.diff(samples.query(f"trial == {trial}")["time"]) > 0) for trial in samples["trial"].unique()]):
         raise ValueError("Samples need to be in chronological order within trial.")
@@ -276,7 +276,7 @@ def label_blinks_artifacts(fixations: pd.DataFrame) -> np.array:
 
 """
 
-# This function takes a data frame of the samples and aggregates the
+# This function takes a Data frame of the samples and aggregates the
 # samples into fixations.  This requires that the samples have been
 # annotated using the function detect.saccades.
 aggregate.fixations <- function(samples) {
@@ -304,7 +304,7 @@ aggregate.fixations <- function(samples) {
   # Discard samples that occurred during saccades:
   samples <- samples[!samples$saccade,,drop=FALSE]
 
-  fixations <- with(samples, data.frame(
+  fixations <- with(samples, Data.frame(
     trial   = tapply(trial, fixation.id, function(x) x[1]),
     start   = tapply(time,  fixation.id, min),
     end     = tapply(t2,    fixation.id, function(x) max(x, na.rm=TRUE)),
@@ -358,7 +358,7 @@ def aggregate_fixations(samples: pd.DataFrame) -> pd.DataFrame:
 """
 
 # Implementation of the Engbert & Kliegl algorithm for the
-# detection of saccades.  This function takes a data frame of the
+# detection of saccades.  This function takes a Data frame of the
 # samples and adds three columns:
 #
 # - A column named "saccade" which contains booleans indicating

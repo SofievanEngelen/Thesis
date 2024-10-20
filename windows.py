@@ -9,15 +9,15 @@ from feature_extraction import compute_features
 
 def create_window(df: pd.DataFrame, start_time: int, end_time: int) -> (pd.DataFrame, pd.DataFrame):
     """
-        Create a data window for a specific time range and process it to detect fixations.
+        Create a Data window for a specific time range and process it to detect fixations.
 
-        :param df: The input DataFrame containing participant data.
+        :param df: The input DataFrame containing participant Data.
         :param start_time: The start time for the window (in milliseconds).
         :param end_time: The end time for the window (in milliseconds).
 
         :return: A DataFrame containing detected fixation events for the time window.
     """
-    # filter out data in given window
+    # filter out Data in given window
     window_data = df[(df['time'] > start_time) & (df['time'] < end_time)]
 
     # set trial to  start_time in seconds
@@ -26,7 +26,7 @@ def create_window(df: pd.DataFrame, start_time: int, end_time: int) -> (pd.DataF
     window_data.reset_index(inplace=True)
     window_data.to_csv('window_data.csv', index=False)
 
-    # detect gaze events in window data
+    # detect gaze events in window Data
     window_features = compute_features(window_data)
 
     return window_features
@@ -34,13 +34,13 @@ def create_window(df: pd.DataFrame, start_time: int, end_time: int) -> (pd.DataF
 
 def start_sliding_window(participant: int, data: DataFrame, window_size: int) -> None:
     """
-        Process data using a sliding window approach for a specific participant.
+        Process Data using a sliding window approach for a specific participant.
 
-        :param participant: The ID of the participant whose data is being processed.
-        :param data: The input DataFrame containing participant data.
+        :param participant: The ID of the participant whose Data is being processed.
+        :param data: The input DataFrame containing participant Data.
         :param window_size: The size of the sliding window (in milliseconds).
 
-        :return: The function prints the window data for each sliding window step.
+        :return: The function prints the window Data for each sliding window step.
     """
 
     start_time = 0
@@ -63,15 +63,15 @@ def start_sliding_window(participant: int, data: DataFrame, window_size: int) ->
 
 def training_windows(df: pd.DataFrame, window_size: int, features: bool = False, to_file: str = None) -> pd.DataFrame:
     """
-        Generate training data using sliding windows from paragraphs of interest.
+        Generate training Data using sliding windows from paragraphs of interest.
 
-        :param df: Dataframe containing participant data.
+        :param df: Dataframe containing participant Data.
         :param window_size: The size of the sliding window (in milliseconds).
         :param features: Boolean indicating whether to compute the features of the probe window
         :param to_file: The path to save the resulting DataFrame. If the file already exists, the function will read
         from it.
 
-        :return: A DataFrame containing training data with detected fixations in each window.
+        :return: A DataFrame containing training Data with detected fixations in each window.
     """
     # if to_file and os.path.isfile(to_file):
     #     return pd.read_csv(to_file)

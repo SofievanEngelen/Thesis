@@ -5,9 +5,9 @@ GLOBAL_FEATURES = ["A"]
 LOCAL_FEATURES = ["B"]
 
 # Dataframes
-# AOI_DF = pd.read_csv('./original-data/aoi-boxes.csv', delimiter=';', decimal=',')
-# RAW_GAZE_DF = pd.read_csv('./original-data/raw_gaze_data.csv')
-# PRC_GAZE_DF = pd.read_csv('./processed-data/processed_gaze_data.csv')
+# AOI_DF = pd.read_csv('./original-Data/aoi-boxes.csv', delimiter=';', decimal=',')
+# RAW_GAZE_DF = pd.read_csv('./original-Data/raw_gaze_data.csv')
+# PRC_GAZE_DF = pd.read_csv('./processed-Data/processed_gaze_data.csv')
 
 # Model parameters
 XGB_FINAL = {}
