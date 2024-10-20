@@ -13,6 +13,7 @@ def compute_statistics(series, variable_name):
         Computes various statistical measures for a given pandas Series.
 
         :param series: A pandas Series containing numerical data.
+        :param variable_name: The name of the variable to compute statistics for, for dictionary naming purposes.
         :return: A dictionary with statistical measures.
     """
     return {
@@ -35,26 +36,34 @@ def compute_features(gaze_data: pd.DataFrame) -> pd.DataFrame:
         :return: A pandas DataFrame with computed features.
     """
     # Detect events from gaze data
-    fixation_df, blink_df, saccade_df = detect_events(gaze_data)
+    fixation_df, saccade_df = detect_events(gaze_data)
+    # print("Blinks: ", blink_df)
 
-    fixation_df['participant'] = gaze_data['Participant'][0]
-    blink_df['participant'] = gaze_data['Participant'][0]
-    saccade_df['participant'] = gaze_data['Participant'][0]
+    participant = gaze_data['Participant'][0]
+    paragraph = gaze_data['Paragraph'][0]
 
-    fixation_df['paragraph'] = gaze_data['Paragraph'][0]
-    blink_df['paragraph'] = gaze_data['Paragraph'][0]
-    saccade_df['paragraph'] = gaze_data['Paragraph'][0]
+    fixation_df['participant'] = participant
+    # blink_df['participant'] = participant
+    saccade_df['participant'] = participant
+
+    fixation_df['paragraph'] = paragraph
+    # blink_df['paragraph'] = paragraph
+    saccade_df['paragraph'] = paragraph
+
+    # print("Fixations: ", fixation_df)
+    # print("Saccades: ", saccade_df)
 
     # Filter fixations that fall within the AOI
     fixation_AOI_df = fixation_df[fixation_df.apply(lambda row: checkAOI(row['x_CC'], row['y_CC'], row['paragraph']),
                                                     axis=1)]
-    print(fixation_AOI_df.head())
+
+    # print("AOI fixations: ", fixation_AOI_df)
 
     # Define features to avoid repeated lookups
     num_fixations = len(fixation_df)
     num_saccades = len(saccade_df)
     saccade_angles = saccade_df['angle']
-    blink_duration = blink_df['duration'] if not blink_df.empty else pd.Series([0])
+    # blink_duration = blink_df['duration'] if not blink_df.empty else pd.Series([0])
 
     # Fixation features
     fixation_duration_stats = compute_statistics(fixation_df['duration'], 'fixation_duration')
@@ -66,11 +75,15 @@ def compute_features(gaze_data: pd.DataFrame) -> pd.DataFrame:
     saccade_angle_stats = compute_statistics(saccade_angles, 'saccade_angle')
 
     # Blink features
-    blink_duration_stats = compute_statistics(blink_duration, 'blink_duration')
+    # blink_duration_stats = compute_statistics(blink_duration, 'blink_duration')
 
     # Fixation within AOI features
-    fixation_AOI_duration_stats = compute_statistics(fixation_AOI_df['duration'], 'fixation_AOI_duration_')
-    fixation_AOI_dispersion_stats = compute_statistics(fixation_AOI_df['dispersion'], 'fixation_AOI_dispersion')
+    if not fixation_AOI_df.empty:
+        fixation_AOI_duration_stats = compute_statistics(fixation_AOI_df['duration'], 'fixation_AOI_duration_')
+        fixation_AOI_dispersion_stats = compute_statistics(fixation_AOI_df['dispersion'], 'fixation_AOI_dispersion')
+    else:
+        fixation_AOI_duration_stats = compute_statistics(pd.Series(0), 'fixation_AOI_duration_')
+        fixation_AOI_dispersion_stats = compute_statistics(pd.Series(0), 'fixation_AOI_dispersion')
 
     feature_dict = {
         'num_fixations': num_fixations,
@@ -84,8 +97,8 @@ def compute_features(gaze_data: pd.DataFrame) -> pd.DataFrame:
         'horizontal_saccade_ratio': (saccade_angles.abs() < (np.pi / 4)).sum() / num_saccades if num_saccades else np.nan,
         'fixation_saccade_ratio': num_fixations / num_saccades if num_saccades else np.nan,
 
-        'num_blinks': len(blink_df),
-        **blink_duration_stats,
+        # 'num_blinks': len(blink_df),
+        # **blink_duration_stats,
         'num_fixations_AOI': len(fixation_AOI_df),
         **fixation_AOI_duration_stats,
         **fixation_AOI_dispersion_stats

@@ -10,27 +10,29 @@ robjects.r('''
 suppressPackageStartupMessages(library(dplyr))
 
 # FIXATION + BLINK DETECTION
-detect.and.process.events <- function(samples, lambda = 6, smooth.coordinates = TRUE, smooth.saccades = FALSE) {
+detect.and.process.events <- function(samples, lambda = 6, pixels = FALSE, smooth.coordinates = TRUE) {
   
   # Validate input columns
-  if (!all(c("x", "y", "trial", "time") %in% colnames(samples))) {
-    stop("Input data frame needs columns 'x_CC', 'y_CC', 'trial', and 'time'.")
+  if (!all(c("x", "y", "trial", "time", "WinWidth", "WinHeight") %in% colnames(samples))) {
+    stop("Input data frame needs columns 'x_CC', 'y_CC', 'trial', 'time', 'WinWidth', and 'WinHeight'.")
   }
   
   # Check chronological order
   if (!all(with(samples, tapply(time, trial, function(x) all(diff(x) > 0))))) {
-    stop("Samples need to be in chronological order within trial.")
+    print("Samples need to be in chronological order within trial.")
+    samples[order(samples$time),]
   }
   
   # Keep only necessary columns
-  winwidth <- 1366
-  winheight <- 667
-  samples <- samples %>% select(x, y, trial, time)
+  samples <- samples %>% select(x, y, trial, time, WinWidth, WinHeight)
   
   samples$x_CC <- samples$x
   samples$y_CC <- samples$y
-  samples$x <- samples$x_CC * winheight + (winwidth / 2)
-  samples$y <- (winheight / 2) - (samples$y_CC * winheight)
+  
+  if (pixels) {
+      samples$x <- samples$x_CC * samples$WinHeight + (samples$WinWidth / 2)
+      samples$y <- (samples$WinHeight / 2) - (samples$y_CC * samples$WinHeight)
+  }
     
   # Smooth coordinates if specified
   if (smooth.coordinates) {
@@ -44,16 +46,14 @@ detect.and.process.events <- function(samples, lambda = 6, smooth.coordinates = 
   }
   
   # Detect saccades
-  samples <- detect.saccades(samples, lambda, smooth.saccades)
-  
+  samples <- detect.saccades(samples, lambda)
+
   # Check if any saccades detected
   if (all(!samples$saccade)) {
     stop("No saccades were detected. Something went wrong.")
   }
   
   # Aggregate events
-  # all_events <- aggregate.events(samples)
-  # all_events$event <- label.blinks.artifacts(all_events)
   all_events <- aggregate_and_label_events(samples)
 
   # Process Fixations and Blinks using dplyr for efficiency
@@ -152,7 +152,7 @@ aggregate_and_label_events <- function(samples) {
   return(events)
 }
 
-detect.saccades <- function(samples, lambda, smooth.saccades) {
+detect.saccades <- function(samples, lambda) {
   
   # Calculate horizontal and vertical velocities:
   vx <- stats::filter(samples$x, -1:1/2)
@@ -172,10 +172,7 @@ detect.saccades <- function(samples, lambda, smooth.saccades) {
   radiusy <- msdy * lambda
   
   sacc <- ((vx/radiusx)^2 + (vy/radiusy)^2) > 1
-  if (smooth.saccades) {
-    sacc <- stats::filter(sacc, rep(1/3, 3))
-    sacc <- as.logical(round(sacc))
-  }
+
   samples$saccade <- ifelse(is.na(sacc), FALSE, sacc)
   samples$vx <- vx
   samples$vy <- vy
@@ -187,23 +184,10 @@ detect.saccades <- function(samples, lambda, smooth.saccades) {
 # SACCADE DETECTION
 detect.and.process.saccades <- function(samples, lambda = 6) {
   
-  # Calculate horizontal and vertical velocities:
-  vx <- stats::filter(samples$x, -1:1/2)
-  vy <- stats::filter(samples$y, -1:1/2)
-  
-  # Compute median-based standard deviation
-  msdx <- sqrt(stats::median(vx^2, na.rm=TRUE) - stats::median(vx, na.rm=TRUE)^2)
-  msdy <- sqrt(stats::median(vy^2, na.rm=TRUE) - stats::median(vy, na.rm=TRUE)^2)
-  
-  # Define thresholds
-  radiusx <- msdx * lambda
-  radiusy <- msdy * lambda
-  
-  # Identify saccades
-  sacc <- ((vx/radiusx)^2 + (vy/radiusy)^2) > 1
-  samples$saccade <- ifelse(is.na(sacc), FALSE, sacc)
-  samples$vx <- vx
-  samples$vy <- vy
+  samples <- detect.saccades(samples, lambda)
+  if (all(!samples$saccade)) {
+    stop("No saccades were detected in separate function. Something went wrong.")
+  }
   
   # Detect saccade changes
   saccade_events <- diff(c(FALSE, samples$saccade))
@@ -239,8 +223,8 @@ detect.and.process.saccades <- function(samples, lambda = 6) {
     
     # Ensure indices are valid
     if (!is.na(start_idx) && !is.na(end_idx) &&
-        start_idx > 0 && end_idx > 0 &&
-        start_idx <= nrow(samples) && end_idx <= nrow(samples)) {
+        isTRUE(start_idx > 0 && end_idx > 0 &&
+        start_idx <= nrow(samples) && end_idx <= nrow(samples))) {
       
       start_x <- samples$start_x[start_idx]
       start_y <- samples$start_y[start_idx]
@@ -267,11 +251,8 @@ detect.and.process.saccades <- function(samples, lambda = 6) {
 
 ''')
 
-start = time.time()
 detect_and_process_events = robjects.globalenv['detect.and.process.events']
 detect_and_process_saccades = robjects.globalenv['detect.and.process.saccades']
-end = time.time()
-print(f"Done loading R objects. Took {end - start} seconds.")
 
 
 def detect_events(df: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame):
@@ -281,14 +262,14 @@ def detect_events(df: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame
 
     events_list = detect_and_process_events(r_df)
     fixations_r_df = events_list.rx2('fixations')
-    blinks_r_df = events_list.rx2('blinks')
+    # blinks_r_df = events_list.rx2('blinks')
     saccades_r_df = detect_and_process_saccades(r_df)
 
     # convert R DataFrame back to Pandas
     fixations_df = pandas2ri.rpy2py(fixations_r_df)
-    blinks_df = pandas2ri.rpy2py(blinks_r_df)
+    # blinks_df = pandas2ri.rpy2py(blinks_r_df)
     saccades_df = pandas2ri.rpy2py(saccades_r_df)
     end_time = time.time()
-    print(f"Done processing window for event detection. Took {end_time - start_time} seconds.")
+    print(f"Done detecting events for window. Took {end_time - start_time} seconds.")
 
-    return fixations_df, blinks_df, saccades_df
+    return fixations_df, saccades_df#, blinks_df

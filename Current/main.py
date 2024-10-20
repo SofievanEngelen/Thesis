@@ -37,20 +37,16 @@ def plot_gazes(participants, AOI_df, df):
 def main():
     pass
     # Preprocessing
-    processed_gaze_data = preprocess_gaze_data("./original-data/raw_gaze_data.csv", to_file='processed-data/processed_gaze_data.csv')
+    # processed_gaze_data = preprocess_gaze_data(filepath="./original-data/raw_gaze_data.csv",
+    #                                            to_file='processed-data/processed_gaze_data.csv')
 
     # Feature extraction
-    # compute_features(processed_gaze_data)
+    test_window = pd.read_csv('window_data.csv')
+    print(compute_features(test_window))
 
-    # df = pd.read_csv('processed-data/test_window.csv')
-    # print(compute_features(df))
-    # pd.DataFrame.append()
+    # Training windows
     # df = pd.read_csv('processed-data/processed_gaze_data.csv')
-    # train_windows = []
-    # for p in range(1, len(unique(df['Participant'])) + 1):
-    #     print(p)
-    #     p_df = df[df['Participant'] == p]
-    #     p_window_df = training_windows(p_df, WINDOW_SIZE)
+    # training_windows(df, WINDOW_SIZE, to_file='processed-data/train_windows_features.csv')
     #     display(p_window_df)
     #     train_windows.append(p_window_df)
     #
