@@ -3,7 +3,7 @@ import time
 
 import pandas as pd
 from IPython.core.display_functions import display
-from pandas import DataFrame
+from pandas import DataFrame, unique
 from feature_extraction import compute_features
 
 
@@ -23,10 +23,13 @@ def create_window(df: pd.DataFrame, start_time: int, end_time: int) -> (pd.DataF
     # set trial to  start_time in seconds
     window_data.loc[:, 'trial'] = int(start_time / 1000)
 
+    window_data.reset_index(inplace=True)
+    window_data.to_csv('window_data.csv', index=False)
+
     # detect gaze events in window data
     window_features = compute_features(window_data)
 
-    return window_data, window_features
+    return window_features
 
 
 def start_sliding_window(participant: int, data: DataFrame, window_size: int) -> None:
@@ -75,27 +78,27 @@ def training_windows(df: pd.DataFrame, window_size: int, features: bool = False,
 
     probe_paragraphs = [4, 10, 15, 20, 26, 30, 36]
 
+    # 5, 11-30, 20, 23, 26?,
+
     # train_window_data = []
-    train_features_df = pd.DataFrame()
+    train_features_df = []
+    for p in range(26, len(unique(df['Participant'])) + 1):
+        print("Participant ", p)
+        p_df = df[df['Participant'] == p]
+        # find the last entry of the paragraph = endtime
+        for paragraph in probe_paragraphs:
+            end_time = p_df.loc[p_df['Paragraph'] == paragraph, 'time'].iloc[-1]
+            start_time = end_time - window_size
 
-    # find the last entry of the paragraph = endtime
-    for paragraph in probe_paragraphs:
-        end_time = df.loc[df['Paragraph'] == paragraph, 'time'].iloc[-1]
-        start_time = end_time - window_size
+            features_df = create_window(p_df, start_time, end_time)
+            print(features_df)
 
-        probe_df, features_df = create_window(df, start_time, end_time)
-        print(probe_df)
+            train_features_df.append(features_df)
 
-        # train_window_data.append(probe_df)
-        if train_features_df is None:
-            train_features_df = pd.DataFrame(features_df)
-        else:
-            train_features_df = pd.concat([train_features_df, features_df], ignore_index=True)
+    train_df = pd.concat(train_features_df)
 
-    # train_df = pd.concat(train_window_data)
+    if to_file:
+        train_df.to_csv(to_file, index=False, header=True)
 
-    # if to_file:
-    #     train_df.to_csv(to_file, index=False)
-
-    return train_features_df
+    return train_df
 
