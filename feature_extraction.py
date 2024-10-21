@@ -4,7 +4,7 @@ import numpy as np
 from scipy.stats import kurtosis, skew
 from saccades import detect_events
 
-AOI_df = pd.read_csv('./original-Data/aoi-boxes.csv', delimiter=';', decimal=',')
+AOI_df = pd.read_csv('/Users/sofie/dev/Python/Uni/Thesis/Thesis - code/Data/original-data/AOI_gaze_data.csv', delimiter=';', decimal=',')
 
 
 # Helper function that computes statistics for a measure

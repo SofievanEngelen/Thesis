@@ -11,6 +11,7 @@ from windows import training_windows
 from preprocessing import preprocess_gaze_data
 from constants import *
 from feature_extraction import compute_features
+import ml
 
 
 def plot_gazes(participants, AOI_df, df):
@@ -37,19 +38,13 @@ def plot_gazes(participants, AOI_df, df):
 def main():
     pass
     # Preprocessing
-    # processed_gaze_data = preprocess_gaze_data(filepath="./original-Data/raw_gaze_data.csv",
-    #                                            to_file='processed-Data/processed_gaze_data.csv')
-
-    # Feature extraction
-    test_window = pd.read_csv('window_data.csv')
-    print(compute_features(test_window))
+    processed_gaze_data = preprocess_gaze_data(filepath="./original-Data/raw_gaze_data.csv",
+                                               to_file='processed-Data/processed_gaze_data.csv')
 
     # Training windows
     # df = pd.read_csv('processed-Data/processed_gaze_data.csv')
-    # training_windows(df, WINDOW_SIZE, to_file='processed-Data/train_windows_features.csv')
-    #     display(p_window_df)
-    #     train_windows.append(p_window_df)
-    #
+    training_windows(processed_gaze_data, WINDOW_SIZE, to_file='processed-Data/train_windows_features.csv')
+
     # train_windows_df = pd.concat(train_windows)
     # train_windows_df.to_csv('train_windows_features.csv', index=False, header=True)
 
