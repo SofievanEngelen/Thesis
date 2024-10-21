@@ -35,6 +35,3 @@ RF_PARAMS = {}
 LSVM_FINAL = {}
 LSVM_PARAMS = {'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000],
                'max_iter': 1000}
-
-NB_FINAL = {}
-NB_PARAMS = {}
