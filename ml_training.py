@@ -10,17 +10,6 @@ import pandas as pd
 from constants import *
 
 
-def log_message(message: str, verbose: bool) -> None:
-    """
-    Prints a message if verbose mode is enabled.
-
-    :param message: The message to print.
-    :param verbose: Flag indicating whether to print the message.
-    """
-    if verbose:
-        print(message)
-
-
 def load_or_train_model(file_path: Union[str, Path], train_func: Callable[[], object]) -> object:
     """
     Loads a model from a file if it exists, otherwise trains a new model.

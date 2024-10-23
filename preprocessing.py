@@ -1,11 +1,6 @@
-import operator
 import os
-import re
-
-import pyreadr
 import pandas as pd
-from IPython.core.display_functions import display
-from sklearn.preprocessing import OneHotEncoder
+from constants import log_message
 
 
 def convert_cartesian_to_pixels(df):
@@ -13,8 +8,6 @@ def convert_cartesian_to_pixels(df):
     Convert Cartesian coordinates in a DataFrame to pixel coordinates.
 
     :param df: DataFrame with 'x' and 'y' columns.
-    :param winwidth: Screen width in pixels.
-    :param winheight: Screen height in pixels.
     :return: DataFrame with 'x_pixel' and 'y_pixel' columns.
     """
     # Apply the transformation formulas
@@ -30,29 +23,28 @@ def preprocess_gaze_data(filepath: str, verbose: bool = True, to_file: str = Non
     pixels, and calculating cumulative time for each paragraph.
 
     :param filepath: Path to the CSV file containing gaze Data.
-    :param verbose:  If True, prints progress messages. Defaults to True.
-    :param to_file: If provided, the processed Data will be saved to this file instead of returned. Defaults to None.
-
+    :param verbose:  If True, logs progress messages. Defaults to True.
+    :param to_file: If provided, the processed Data is saved to this filepath. Defaults to None.
+# Check if any fixation duration exceeds 10 seconds
+    if not fixation_df.empty and fixation_df['duration'].max() > 10:
+        # If any fixation is longer than 10 seconds, drop the window
+        return pd.DataFrame()  # Return an empty DataFrame to indicate no features are computed
     :return: If `to_file` is None, returns the processed DataFrame. Otherwise,
         it saves the processed DataFrame to the specified filepath and then returns it.
     """
     if to_file and os.path.isfile(to_file):
-        if verbose:
-            print("That file already exists, reading from existing file...")
+        log_message("That file already exists, reading from existing file...", verbose)
         return pd.read_csv(to_file)
 
-    if verbose:
-        print(f"Loading Data from {filepath}...")
+    log_message(f"Loading Data from {filepath}...", verbose)
 
     data = pd.read_csv(filepath)
 
-    if verbose:
-        print(f"Data loaded.")
+    log_message(f"Data loaded.", verbose)
 
     # Participants
     unique_participants = data['Participant'].unique()
-    if verbose:
-        print(f"Number of unique participants: {len(unique_participants)}")
+    log_message(f"Number of unique participants: {len(unique_participants)}", verbose)
 
     # Create a mapping for renaming participants
     participant_mapping = {p: str(i + 1) for i, p in enumerate(unique_participants)}
@@ -60,15 +52,13 @@ def preprocess_gaze_data(filepath: str, verbose: bool = True, to_file: str = Non
     # Rename participants using the mapping
     data['Participant'] = data['Participant'].replace(participant_mapping)
 
-    if verbose:
-        print("Participants renamed.")
+    log_message("Participants renamed.", verbose)
 
     # Iterate through unique participants
     time_column = []
 
     for p in unique_participants:
-        if verbose:
-            print(f"Calculating total time for participant {participant_mapping[p]}...")
+        log_message(f"Calculating total time for participant {participant_mapping[p]}...", verbose)
 
         # Filter rows for the current participant
         participant_data = data[data['Participant'] == participant_mapping[p]]
@@ -86,13 +76,11 @@ def preprocess_gaze_data(filepath: str, verbose: bool = True, to_file: str = Non
 
     data['time'] = list(map(lambda x: x * 1000, time_column))
 
-    if verbose:
-        print("Processing complete.")
+    log_message("Processing complete.", verbose)
 
     if to_file:
         data.to_csv(to_file, index=False, header=True)
-        if verbose:
-            print("Saving complete.")
+        log_message("Saving complete.", verbose)
         return data
     else:
         return data

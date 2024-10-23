@@ -5,6 +5,7 @@ import pandas as pd
 from IPython.core.display_functions import display
 from pandas import DataFrame, unique
 from feature_extraction import compute_features
+from constants import log_message
 
 
 def create_window(df: pd.DataFrame, start_time: int, end_time: int) -> (pd.DataFrame, pd.DataFrame):
@@ -20,14 +21,17 @@ def create_window(df: pd.DataFrame, start_time: int, end_time: int) -> (pd.DataF
     # filter out Data in given window
     window_data = df[(df['time'] > start_time) & (df['time'] < end_time)]
 
-    # set trial to  start_time in seconds
+    # set trial to start_time in seconds
     window_data.loc[:, 'trial'] = int(start_time / 1000)
 
     window_data.reset_index(inplace=True)
     window_data.to_csv('window_data.csv', index=False)
 
+    log_message(f"Finished preparing window data. Trial: {int(start_time / 1000)}")
+
     # detect gaze events in window Data
     window_features = compute_features(window_data)
+    log_message(f"Finished computing window features. Trial: {int(start_time / 1000)}")
 
     return window_features
 
@@ -78,15 +82,12 @@ def training_windows(df: pd.DataFrame, window_size: int, features: bool = False,
 
     probe_paragraphs = [4, 10, 15, 20, 26, 30, 36]
 
-    # 5, 11-30, 20, 23, 26?,
-
-    # train_window_data = []
     train_features_df = []
-    for p in range(26, len(unique(df['Participant'])) + 1):
+    for p in range(1, len(unique(df['Participant'])) + 1):
         print("Participant ", p)
         p_df = df[df['Participant'] == p]
-        # find the last entry of the paragraph = endtime
         for paragraph in probe_paragraphs:
+            # End time is the last time value of the probe paragraph.
             end_time = p_df.loc[p_df['Paragraph'] == paragraph, 'time'].iloc[-1]
             start_time = end_time - window_size
 
