@@ -24,14 +24,6 @@ detect.and.process.events <- function(samples, lambda = 6, pixels = FALSE, smoot
     stop("Input data frame must have columns: 'x', 'y', 'trial', 'time', 'WinWidth', 'WinHeight'.")
   }
 
-  samples$x_CC <- samples$x
-  samples$y_CC <- samples$y
-
-  if (pixels) {
-    samples$x <- samples$x_CC * samples$WinHeight + (samples$WinWidth / 2)
-    samples$y <- (samples$WinHeight / 2) - (samples$y_CC * samples$WinHeight)
-  }
-
   if (smooth.coordinates) {
     x <- samples$x[c(1, nrow(samples))]
     y <- samples$y[c(1, nrow(samples))]
@@ -90,8 +82,8 @@ aggregate.fixations <- function(samples) {
 
   events <- data.frame(
     trial = aggregate_variable(samples, fixation_ids, "trial", function(x) x[1]),
-    x_CC = aggregate_variable(samples, fixation_ids, "x_CC", stats::median),
-    y_CC = aggregate_variable(samples, fixation_ids, "y_CC", stats::median),
+    x = aggregate_variable(samples, fixation_ids, "x", stats::median),
+    y = aggregate_variable(samples, fixation_ids, "x", stats::median),
     duration = aggregate_variable(samples, fixation_ids, "time", function(x) max(x) - min(x)),
     dispersion = sqrt(aggregate_variable(samples, fixation_ids, "x", stats::mad)^2 +
                         aggregate_variable(samples, fixation_ids, "y", stats::mad)^2),
