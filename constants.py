@@ -5,6 +5,18 @@ MIN_FIXATION_DURATION = 10000
 GLOBAL_FEATURES = ["A"]
 LOCAL_FEATURES = ["B"]
 
+
+def log_message(message: str, verbose: bool) -> None:
+    """
+    Prints a message if verbose mode is enabled.
+
+    :param message: The message to print.
+    :param verbose: Flag indicating whether to print the message.
+    """
+    if verbose:
+        print(message)
+
+
 # Dataframes
 AOI_DF_PATH = './original-Data/aoi-boxes.csv'
 RAW_GAZE_DF_PATH = '/Users/sofie/dev/Python/Uni/Thesis/Thesis - code/Data/original-data/raw_gaze_data.csv'
@@ -33,4 +45,3 @@ RF_PARAMS = {}
 
 LSVM_PARAMS = {'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000],
                'max_iter': 1000}
-
