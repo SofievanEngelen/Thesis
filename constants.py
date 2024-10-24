@@ -18,7 +18,7 @@ def log_message(message: str, verbose: bool) -> None:
 
 
 # Dataframes
-AOI_DF_PATH = './original-Data/aoi-boxes.csv'
+AOI_DF_PATH = '/Users/sofie/dev/Python/Uni/Thesis/Thesis - code/Data/original-data/aoi-boxes.csv'
 RAW_GAZE_DF_PATH = '/Users/sofie/dev/Python/Uni/Thesis/Thesis - code/Data/original-data/raw_gaze_data.csv'
 PRC_GAZE_DF_PATH = '/Users/sofie/dev/Python/Uni/Thesis/Thesis - code/Data/processed-data/processed_gaze_data.csv'
 TRAIN_FEATURES_PATH = '/Users/sofie/dev/Python/Uni/Thesis/Thesis - code/Data/processed-data/train_windows_features.csv'
