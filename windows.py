@@ -8,13 +8,14 @@ from feature_extraction import compute_features
 from constants import log_message
 
 
-def create_window(df: pd.DataFrame, start_time: int, end_time: int) -> (pd.DataFrame, pd.DataFrame):
+def create_window(df: pd.DataFrame, start_time: int, end_time: int, verbose: bool = True) -> (pd.DataFrame, pd.DataFrame):
     """
         Create a Data window for a specific time range and process it to detect fixations.
 
         :param df: The input DataFrame containing participant Data.
         :param start_time: The start time for the window (in milliseconds).
         :param end_time: The end time for the window (in milliseconds).
+        :param verbose: If true, log progress to console. Default: True.
 
         :return: A DataFrame containing detected fixation events for the time window.
     """
@@ -27,11 +28,11 @@ def create_window(df: pd.DataFrame, start_time: int, end_time: int) -> (pd.DataF
     window_data.reset_index(inplace=True)
     window_data.to_csv('window_data.csv', index=False)
 
-    log_message(f"Finished preparing window data. Trial: {int(start_time / 1000)}")
+    log_message(f"Finished preparing window data. Trial: {int(start_time / 1000)}", verbose)
 
     # detect gaze events in window Data
     window_features = compute_features(window_data)
-    log_message(f"Finished computing window features. Trial: {int(start_time / 1000)}")
+    log_message(f"Finished computing window features. Trial: {int(start_time / 1000)}", verbose)
 
     return window_features
 
@@ -65,7 +66,8 @@ def start_sliding_window(participant: int, data: DataFrame, window_size: int) ->
             break
 
 
-def training_windows(df: pd.DataFrame, window_size: int, features: bool = False, to_file: str = None) -> pd.DataFrame:
+def training_windows(df: pd.DataFrame, window_size: int, features: bool = False, to_file: str = None,
+                     verbose: bool = True) -> tuple[pd.DataFrame, list[str]]:
     """
         Generate training Data using sliding windows from paragraphs of interest.
 
@@ -74,6 +76,7 @@ def training_windows(df: pd.DataFrame, window_size: int, features: bool = False,
         :param features: Boolean indicating whether to compute the features of the probe window
         :param to_file: The path to save the resulting DataFrame. If the file already exists, the function will read
         from it.
+        :param verbose: If true, log progress to console. Default: True
 
         :return: A DataFrame containing training Data with detected fixations in each window.
     """
@@ -83,6 +86,7 @@ def training_windows(df: pd.DataFrame, window_size: int, features: bool = False,
     probe_paragraphs = [4, 10, 15, 20, 26, 30, 36]
 
     train_features_df = []
+    dropped_windows = []
     for p in range(1, len(unique(df['Participant'])) + 1):
         print("Participant ", p)
         p_df = df[df['Participant'] == p]
@@ -92,7 +96,13 @@ def training_windows(df: pd.DataFrame, window_size: int, features: bool = False,
             start_time = end_time - window_size
 
             features_df = create_window(p_df, start_time, end_time)
-            print(features_df)
+
+            log_message(f"Finished creating window p{p}, paragraph {paragraph}", verbose)
+
+            if features_df.empty:
+                window_string = f"p{p}, paragraph {paragraph}"
+                dropped_windows.append(window_string)
+                log_message(f"Something went wrong computing features, window dropped. {window_string}", verbose)
 
             train_features_df.append(features_df)
 
@@ -101,5 +111,5 @@ def training_windows(df: pd.DataFrame, window_size: int, features: bool = False,
     if to_file:
         train_df.to_csv(to_file, index=False, header=True)
 
-    return train_df
+    return train_df, dropped_windows
 

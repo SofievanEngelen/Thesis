@@ -32,18 +32,19 @@ def compute_features(gaze_data: pd.DataFrame) -> pd.DataFrame:
         Computes global and local features from gaze data by detecting fixations, blinks, and saccades.
 
         :param gaze_data: A pandas DataFrame containing gaze Data.
-        :return: A pandas DataFrame with computed features.
+        :return: A pandas DataFrame with computed features, and a boolean indicating if the window was dropped and an
+        empty dataframe was returned.
     """
     # Detect events from gaze Data
     fixation_df, saccade_df = detect_events(gaze_data)
 
-    # Drop the window if any fixation lasts more than 10 seconds
-    if not fixation_df.empty and fixation_df['duration'].max() > MIN_FIXATION_DURATION:
-        return pd.DataFrame()
-
     participant = gaze_data['Participant'].iloc[0]
     paragraph = gaze_data['Paragraph'].iloc[0]
     trial = gaze_data['trial'].iloc[0]
+
+    # Drop the window if any fixation lasts more than 10 seconds
+    if (not fixation_df.empty and fixation_df['duration'].max() > MIN_FIXATION_DURATION) or saccade_df.empty:
+        return pd.DataFrame()
 
     fixation_df['paragraph'] = paragraph
 
