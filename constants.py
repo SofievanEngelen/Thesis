@@ -4,6 +4,7 @@ WINDOW_SIZE = 20000
 MIN_FIXATION_DURATION = 10000
 GLOBAL_FEATURES = ["A"]
 LOCAL_FEATURES = ["B"]
+WINDOW_MAPPING = {4: 1, 10: 2, 15: 3, 20: 4, 26: 5, 30: 6, 36: 7}
 
 
 def log_message(message: str, verbose: bool) -> None:
