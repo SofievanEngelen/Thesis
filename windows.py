@@ -66,7 +66,7 @@ def start_sliding_window(participant: int, data: DataFrame, window_size: int) ->
             break
 
 
-def training_windows(df: pd.DataFrame, window_size: int, features: bool = False, to_file: str = None,
+def training_windows(df: pd.DataFrame,  window_size: int, features: bool = False, to_file: str = None,
                      verbose: bool = True) -> tuple[pd.DataFrame, list[str]]:
     """
         Generate training Data using sliding windows from paragraphs of interest.
@@ -102,6 +102,7 @@ def training_windows(df: pd.DataFrame, window_size: int, features: bool = False,
             if features_df.empty:
                 window_string = f"p{p}, paragraph {paragraph}"
                 dropped_windows.append(window_string)
+                # drop probe from probe df
                 log_message(f"Something went wrong computing features, window dropped. {window_string}", verbose)
 
             train_features_df.append(features_df)
