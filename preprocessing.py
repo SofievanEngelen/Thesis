@@ -1,6 +1,9 @@
 import os
+import re
+
+import numpy as np
 import pandas as pd
-from constants import log_message
+from constants import log_message, WINDOW_MAPPING
 
 
 def convert_cartesian_to_pixels(df):
@@ -15,6 +18,22 @@ def convert_cartesian_to_pixels(df):
     df['y_pixel'] = (df['WinHeight'] / 2) - (df['y'] * df['WinHeight'])
 
     return df
+
+
+def rename_participants(df: pd.DataFrame, verbose: bool = True):
+    # Participants
+    unique_participants = df['Participant'].unique()
+    log_message(f"Number of unique participants: {len(unique_participants)}", verbose)
+
+    # Create a mapping for renaming participants
+    participant_mapping = {p: str(i + 1) for i, p in enumerate(unique_participants)}
+
+    # Rename participants using the mapping
+    df['Participant'] = df['Participant'].replace(participant_mapping)
+
+    log_message("Participants renamed.", verbose)
+
+    return df, unique_participants
 
 
 def preprocess_gaze_data(filepath: str, verbose: bool = True, to_file: str = None) -> pd.DataFrame:
@@ -42,17 +61,9 @@ def preprocess_gaze_data(filepath: str, verbose: bool = True, to_file: str = Non
 
     log_message(f"Data loaded.", verbose)
 
-    # Participants
-    unique_participants = data['Participant'].unique()
-    log_message(f"Number of unique participants: {len(unique_participants)}", verbose)
-
+    data, unique_participants = rename_participants(data)
     # Create a mapping for renaming participants
     participant_mapping = {p: str(i + 1) for i, p in enumerate(unique_participants)}
-
-    # Rename participants using the mapping
-    data['Participant'] = data['Participant'].replace(participant_mapping)
-
-    log_message("Participants renamed.", verbose)
 
     # Iterate through unique participants
     time_column = []
@@ -77,6 +88,81 @@ def preprocess_gaze_data(filepath: str, verbose: bool = True, to_file: str = Non
     data['time'] = list(map(lambda x: x * 1000, time_column))
 
     log_message("Processing complete.", verbose)
+
+    if to_file:
+        data.to_csv(to_file, index=False, header=True)
+        log_message("Saving complete.", verbose)
+        return data
+    else:
+        return data
+
+
+def compute_MW_score(df: pd.DataFrame) -> int:
+    """
+    Computes the average MW score.
+    """
+    pass
+
+
+def preprocess_probe_data(filepath: str,
+                          dropped_windows: dict[str, list[int]],
+                          verbose: bool = True,
+                          to_file: str = None) -> pd.DataFrame:
+    """
+    Preprocesses the probe data to rename the participants to legible names and drops the windows that had insufficient
+    data.
+    :param filepath: Path to the raw probe data.
+    :param dropped_windows: Windows to be dropped from the probe data.
+    :param verbose: Boolean indicating if process messages should be printed to the console.
+    :param to_file: Path to which the processed probe data should be saved.
+    :return: Processed probe data in a pandas dataframe.
+    """
+    # if to_file and os.path.isfile(to_file):
+    #     log_message("That file already exists, reading from existing file...", verbose)
+    #     return pd.read_csv(to_file)
+
+    data, unique_participants = rename_participants(pd.read_csv(filepath))
+
+    # mask = pd.Series(False, index=data.index)
+    # for participant, probe_list in dropped_windows.items():
+    #     log_message(f"Processing participant {participant} with probes {probe_list}", verbose)
+    #
+    #     # Construct a condition that marks rows with the current participant and any matching probe
+    #     participant_condition = (data['Participant'] == participant)
+    #     probe_condition = data['Probe'].isin(probe_list)
+    #
+    #     log_message(f"Participant condition for {participant}:\n {data[participant_condition].head()}", verbose)
+    #     log_message(f"Probe condition for {probe_list}:\n {data[probe_condition].head()}", verbose)
+    #
+    #     # Combine conditions for current participant-probe set and update the mask
+    #     current_mask = participant_condition & probe_condition
+    #     log_message(f"Marked {len(data[current_mask])} rows for Participant {participant}, Probes {probe_list}",
+    #                 verbose)
+    #     mask |= current_mask
+    #
+    # # Create a mask to select all rows to drop
+    # for participant, probe_list in dropped_windows.items():
+    #     mask |= (data['Participant'] == int(participant)) & (data['Probe'].isin([int(probe) for probe in probe_list]))
+    #
+    # # Drop rows using the mask
+    # data = data[~mask]
+    # print(f"Expected to drop {len(data) - data[~mask].shape[0]} rows.")
+
+    drop_indices = []
+    for participant, probe_list in dropped_windows.items():
+        log_message(f"Processing participant {participant} with probes {probe_list}", verbose)
+        for probe in probe_list:
+            index = data.loc[(data['Participant'].astype(int) == int(participant)) & (
+                        data['Probe'].astype(int) == int(WINDOW_MAPPING[probe]))].index
+            drop_indices += list(index.values)
+
+    print(drop_indices, len(drop_indices))
+
+    # Drop collected indices in a single operation
+    data.drop(index=drop_indices, inplace=True)
+    log_message(f"Dropped {len(drop_indices)} windows.", verbose)
+
+    # data["MW-score"] = compute_MW_score(data)
 
     if to_file:
         data.to_csv(to_file, index=False, header=True)
