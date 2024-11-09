@@ -1,27 +1,10 @@
-## Feature selection
-# First PCA
-# Then exhaustive selection to find best subset of components
-import pandas as pd
-from sklearn.decomposition import PCA
-from sklearn.ensemble import RandomForestClassifier
-
-from constants import log_message
-
-import pandas as pd
-from sklearn.decomposition import PCA
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_selection import RFE
+from sklearn.model_selection import cross_val_score
+from constants import log_message, RANDOM_SEED
 import numpy as np
-
 import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import RFE
-
-
-def log_message(message, verbose=True):
-    if verbose:
-        print(message)
 
 
 def PCA_analysis(X, verbose=True):
@@ -39,7 +22,6 @@ def PCA_analysis(X, verbose=True):
     """
     # Drop non-feature columns (assumes names; adjust as necessary)
     feature_cols = X.drop(columns=['participant', 'paragraph', 'trial', 'group_id'], errors='ignore')
-    print(X.columns)
 
     # Initialize PCA with MLE for automatic component selection
     pca = PCA(n_components='mle')
@@ -57,7 +39,6 @@ def PCA_analysis(X, verbose=True):
     loadings = pd.DataFrame(pca.components_, columns=feature_cols.columns, index=X_pca_df.columns)
     loadings.to_csv("pca_loadings.csv", index=True)
 
-    print(X['participant'])
     X_pca_df['Participant'] = X['participant']
     X_pca_df['group_id'] = X['group_id']
 
@@ -92,12 +73,6 @@ def RFE_selection(X_pca_df, y, n_features_rfe=30, verbose=True):
     return X_rfe_selected
 
 
-from sklearn.model_selection import cross_val_score
-from sklearn.feature_selection import RFE
-from sklearn.ensemble import RandomForestClassifier
-import numpy as np
-
-
 def optimal_features_RFE(X_pca_df, y, max_features=30, verbose=True):
     """
     Perform RFE on PCA-transformed data and use cross-validation to find the optimal number of components.
@@ -113,15 +88,14 @@ def optimal_features_RFE(X_pca_df, y, max_features=30, verbose=True):
     - best_rfe_model: The RFE model with the optimal number of features.
     """
     # Initialize RandomForest model
-    estimator = RandomForestClassifier(random_state=42)
+    estimator = RandomForestClassifier(random_state=RANDOM_SEED)
 
     # Store cross-validation scores for different feature subsets
     mean_scores = []
 
     # Try different numbers of features (1 to max_features)
     for n_features in range(1, max_features + 1):
-        if verbose:
-            print(f"Evaluating RFE with {n_features} features...")
+        log_message(f"Evaluating RFE with {n_features} features...", verbose)
 
         # Set up RFE with the current number of features to select
         rfe = RFE(estimator, n_features_to_select=n_features)
@@ -129,17 +103,14 @@ def optimal_features_RFE(X_pca_df, y, max_features=30, verbose=True):
         # Perform cross-validation and store the mean score
         scores = cross_val_score(rfe, X_pca_df, y, cv=5, scoring='accuracy')  # 5-fold CV, accuracy as scoring
         mean_scores.append(np.mean(scores))
-
-        if verbose:
-            print(f"Mean cross-validation score with {n_features} features: {np.mean(scores)}")
+        log_message(f"Mean cross-validation score with {n_features} features: {np.mean(scores)}", verbose)
 
     # Find the number of features with the highest cross-validation score
     optimal_n_features = np.argmax(mean_scores) + 1  # Add 1 since range starts from 1
     best_rfe_model = RFE(estimator, n_features_to_select=optimal_n_features)
     best_rfe_model.fit(X_pca_df, y)
 
-    if verbose:
-        print(f"Optimal number of features: {optimal_n_features}")
+    log_message(f"Optimal number of features: {optimal_n_features}", verbose)
 
     # Return the RFE model with optimal number of features
     return optimal_n_features, best_rfe_model
