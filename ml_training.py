@@ -8,6 +8,7 @@ from sklearn import linear_model, ensemble, svm, naive_bayes
 import xgboost as xgb
 import pandas as pd
 from constants import *
+from feature_selection import PCA_analysis
 
 
 def load_or_train_model(file_path: Union[str, Path], train_func: Callable[[], object]) -> object:
@@ -48,7 +49,7 @@ def train_model(X: pd.DataFrame, y: pd.DataFrame, model: str, features: str, smo
     return clf
 
 
-def _train_new_model(X: pd.DataFrame, y: pd.DataFrame, model: str, features: str, smote: bool, verbose: bool) -> object:
+def _train_new_model(X: pd.DataFrame, y: pd.DataFrame, model: str, features: str, smote: bool, verbose: bool = True) -> object:
     """
     Helper function to train a new model, with optional SMOTE resampling and feature selection.
 
@@ -60,23 +61,28 @@ def _train_new_model(X: pd.DataFrame, y: pd.DataFrame, model: str, features: str
     :param verbose: Whether to enable verbose logging.
     :return: The trained model.
     """
-    # Split data into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
     log_message(f"Retrieving features for {features}...", verbose)
 
     # Feature selection based on the specified feature set
     feature_sets = {
-        "G": GLOBAL_FEATURES,
-        "L": LOCAL_FEATURES,
-        "G+L": GLOBAL_FEATURES + LOCAL_FEATURES
+        "G": list(GLOBAL_FEATURES),
+        "L": list(LOCAL_FEATURES),
+        "G+L": list(GLOBAL_FEATURES.union(LOCAL_FEATURES))
     }
     selected_features = feature_sets.get(features)
+    X_features = X[selected_features]
+
     if not selected_features:
         raise ValueError(f"{features} is not a valid feature set.")
 
-    # Filter features in the training and testing sets
-    X_train = X_train[X_train.columns.intersection(selected_features)]
-    X_test = X_test[X_test.columns.intersection(selected_features)]
+    log_message(f"Performing PCA analysis on selected features: {selected_features}...", verbose)
+
+    X_pca_df, explained_variance_ratio, singular_values = PCA_analysis(X_features)
+
+    log_message(f"Finished feature selection process, {len(X_pca_df.columns)} features left", verbose)
+
+    # Split data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X_pca_df, y, test_size=0.2)
 
     log_message(f"Features retrieved: {X_train.columns}", verbose)
 
@@ -134,10 +140,16 @@ def get_model_with_params(model_name: str, X_train: pd.DataFrame, y_train: pd.Da
         return model_class()
 
     # Perform hyperparameter tuning using Leave-One-Group-Out cross-validation
-    groups = X_train["participant"].values
+    groups = X_train["group_id"].values
     logo = LeaveOneGroupOut()
-    gridsearch = GridSearchCV(model_class(), param_grid, cv=logo, scoring='f1', verbose=4)
+    gridsearch = GridSearchCV(model_class(), param_grid, cv=logo, scoring='f1', verbose=4, n_jobs=-1)
     gridsearch.fit(X_train, y_train, groups=groups)
 
     # Return the model with the best hyperparameters
+    print(gridsearch.best_params_)
     return model_class(**gridsearch.best_params_)
+
+
+# probes = pd.read_csv('Data/original-data/probe_data.csv')
+# train_windows = pd.read_csv('Data/processed-data/train_windows_features.csv')
+# print(train_model(X=train_windows, y=probes, model="XGBoost", features="G+L", smote=True))
