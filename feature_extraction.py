@@ -73,7 +73,7 @@ def compute_features(gaze_data: pd.DataFrame) -> pd.DataFrame:
     saccade_angle_stats = compute_statistics(saccade_angles, 'saccade_angle')
 
     # Compute fixation AOI features
-    fixation_AOI_duration_stats = compute_statistics(fixation_AOI_df['duration'], 'fixation_AOI_duration_')
+    fixation_AOI_duration_stats = compute_statistics(fixation_AOI_df['duration'], 'fixation_AOI_duration')
     fixation_AOI_dispersion_stats = compute_statistics(fixation_AOI_df['dispersion'], 'fixation_AOI_dispersion')
 
     feature_dict = {

@@ -117,36 +117,11 @@ def preprocess_probe_data(filepath: str,
     :param to_file: Path to which the processed probe data should be saved.
     :return: Processed probe data in a pandas dataframe.
     """
-    # if to_file and os.path.isfile(to_file):
-    #     log_message("That file already exists, reading from existing file...", verbose)
-    #     return pd.read_csv(to_file)
+    if to_file and os.path.isfile(to_file):
+        log_message("That file already exists, reading from existing file...", verbose)
+        return pd.read_csv(to_file)
 
     data, unique_participants = rename_participants(pd.read_csv(filepath))
-
-    # mask = pd.Series(False, index=data.index)
-    # for participant, probe_list in dropped_windows.items():
-    #     log_message(f"Processing participant {participant} with probes {probe_list}", verbose)
-    #
-    #     # Construct a condition that marks rows with the current participant and any matching probe
-    #     participant_condition = (data['Participant'] == participant)
-    #     probe_condition = data['Probe'].isin(probe_list)
-    #
-    #     log_message(f"Participant condition for {participant}:\n {data[participant_condition].head()}", verbose)
-    #     log_message(f"Probe condition for {probe_list}:\n {data[probe_condition].head()}", verbose)
-    #
-    #     # Combine conditions for current participant-probe set and update the mask
-    #     current_mask = participant_condition & probe_condition
-    #     log_message(f"Marked {len(data[current_mask])} rows for Participant {participant}, Probes {probe_list}",
-    #                 verbose)
-    #     mask |= current_mask
-    #
-    # # Create a mask to select all rows to drop
-    # for participant, probe_list in dropped_windows.items():
-    #     mask |= (data['Participant'] == int(participant)) & (data['Probe'].isin([int(probe) for probe in probe_list]))
-    #
-    # # Drop rows using the mask
-    # data = data[~mask]
-    # print(f"Expected to drop {len(data) - data[~mask].shape[0]} rows.")
 
     drop_indices = []
     for participant, probe_list in dropped_windows.items():
