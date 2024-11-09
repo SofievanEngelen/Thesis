@@ -1,7 +1,6 @@
-import pandas as pd
-
 WINDOW_SIZE = 20000
 MIN_FIXATION_DURATION = 10000
+RANDOM_SEED = 42
 GLOBAL_FEATURES = ['participant', 'group_id', 'num_fixations',
                    'fixation_duration_mean', 'fixation_duration_median',
                    'fixation_duration_std', 'fixation_duration_max',
@@ -75,4 +74,4 @@ RF_PARAMS = {'n_estimators': [100, 200, 500],
              'min_samples_split': [2, 5, 10],
              'min_samples_leaf': [1, 5, 10]}
 
-LSVM_PARAMS = {'C': [900, 1000, 1100]}
+LSVM_PARAMS = {'C': [800, 900, 1000, 1100, 1200]}
