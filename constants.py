@@ -2,7 +2,7 @@ import pandas as pd
 
 WINDOW_SIZE = 20000
 MIN_FIXATION_DURATION = 10000
-GLOBAL_FEATURES = {'participant', 'group_id', 'num_fixations',
+GLOBAL_FEATURES = ['participant', 'group_id', 'num_fixations',
                    'fixation_duration_mean', 'fixation_duration_median',
                    'fixation_duration_std', 'fixation_duration_max',
                    'fixation_duration_min', 'fixation_duration_range',
@@ -22,15 +22,15 @@ GLOBAL_FEATURES = {'participant', 'group_id', 'num_fixations',
                    'saccade_angle_median', 'saccade_angle_std', 'saccade_angle_max',
                    'saccade_angle_min', 'saccade_angle_range', 'saccade_angle_kurtosis',
                    'saccade_angle_skewness', 'horizontal_saccade_ratio',
-                   'fixation_saccade_ratio', 'num_fixations_AOI'}
-LOCAL_FEATURES = {'participant', 'group_id', 'fixation_AOI_duration__mean', 'fixation_AOI_duration__median',
+                   'fixation_saccade_ratio', 'num_fixations_AOI']
+LOCAL_FEATURES = ['participant', 'group_id', 'fixation_AOI_duration__mean', 'fixation_AOI_duration__median',
                   'fixation_AOI_duration__std', 'fixation_AOI_duration__max',
                   'fixation_AOI_duration__min', 'fixation_AOI_duration__range',
                   'fixation_AOI_duration__kurtosis', 'fixation_AOI_duration__skewness',
                   'fixation_AOI_dispersion_mean', 'fixation_AOI_dispersion_median',
                   'fixation_AOI_dispersion_std', 'fixation_AOI_dispersion_max',
                   'fixation_AOI_dispersion_min', 'fixation_AOI_dispersion_range',
-                  'fixation_AOI_dispersion_kurtosis', 'fixation_AOI_dispersion_skewness'}
+                  'fixation_AOI_dispersion_kurtosis', 'fixation_AOI_dispersion_skewness']
 WINDOW_MAPPING = {4: 1, 10: 2, 15: 3, 20: 4, 26: 5, 30: 6, 36: 7}
 
 

@@ -65,9 +65,9 @@ def _train_new_model(X: pd.DataFrame, y: pd.DataFrame, model: str, features: str
 
     # Feature selection based on the specified feature set
     feature_sets = {
-        "G": list(GLOBAL_FEATURES),
-        "L": list(LOCAL_FEATURES),
-        "G+L": list(GLOBAL_FEATURES.union(LOCAL_FEATURES))
+        "G": GLOBAL_FEATURES,
+        "L": LOCAL_FEATURES,
+        "G+L": list(set(GLOBAL_FEATURES + LOCAL_FEATURES))
     }
     selected_features = feature_sets.get(features)
     X_features = X[selected_features]
