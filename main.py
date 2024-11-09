@@ -1,5 +1,6 @@
 import re
 from collections import defaultdict
+from typing import List
 
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -8,9 +9,10 @@ from preprocessing import preprocess_gaze_data, preprocess_probe_data
 from constants import *
 from sklearn.model_selection import LeaveOneGroupOut, GridSearchCV
 from feature_extraction import compute_features
-import ml_training
+import ML
 import numpy as np
 from sklearn import svm, datasets
+from ML import train_and_evaluate_models
 
 
 def plot_gazes(participants, AOI_df, df):
@@ -136,14 +138,9 @@ def main():
     # print(X_rfe_selected.shape)
     # rfe_features = ['PC1', 'PC10', 'PC11', 'PC14', 'PC21', 'PC29', 'PC32', 'PC35', 'PC41', 'PC45']
 
-    for model in ["LinearSVM", "XGBoost", "RandomForest", "LogReg", "NaiveBates"]:
-        for feature_set in ["G+L", "G", "L"]:
-            for smote in [True, False]:
-                ml_training.train_model(X=train_windows,
-                                        y=probe_data['TUT'],
-                                        model=model,
-                                        features=feature_set,
-                                        smote=smote)
+    models = ["LinearSVM", "RandomForest", "LogReg", "NaiveBates", "XGBoost"]
+
+    train_and_evaluate_models(models, train_windows, probe_data['TUT'])
 
     # train_windows_df = training_windows('./processed_gaze_data.csv', constants.WINDOW_SIZE, 'train_windows.csv')
     # events_df, saccade_df = detect_events(df)
