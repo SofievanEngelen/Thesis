@@ -14,6 +14,12 @@ import pandas as pd
 from constants import *
 from feature_selection import PCA_analysis
 
+import warnings
+warnings.filterwarnings("ignore")
+
+
+smote_mapping = {True: "smote", False: "no_smote"}
+
 
 def retrieve_features(X: pd.DataFrame, feature_set: str, verbose: bool = True) -> pd.DataFrame:
     """
@@ -35,7 +41,7 @@ def retrieve_features(X: pd.DataFrame, feature_set: str, verbose: bool = True) -
         raise ValueError(f"{feature_set} is not a valid feature set.")
 
     X_features = X[selected_features]
-    X_pca_df, explained_variance_ratio, singular_values = PCA_analysis(X_features)
+    X_pca_df, _, _ = PCA_analysis(X_features, verbose=False)
     if verbose:
         print(f"Applied PCA on {feature_set}: {len(X_pca_df.columns)} features retained.")
     return X_pca_df
@@ -72,9 +78,11 @@ def train_and_evaluate_models(
             X_train, X_test, y_train, y_test = train_test_split(X_transformed, y, test_size=0.2, random_state=42)
 
             for use_smote in [True, False]:
+                global model_id
+                model_id = f"{model}_{feature_set}_{smote_mapping[use_smote]}"
+
                 clf = train_model(X_train, y_train, model, feature_set, use_smote, verbose)
-                metrics_key = f"{model}_{feature_set}_{'smote' if use_smote else 'no_smote'}"
-                metrics[metrics_key] = evaluate_model(clf, X_test, y_test, X_transformed, y, verbose)
+                metrics[model_id] = evaluate_model(clf, X_test, y_test, X_transformed, y, verbose)
     return metrics
 
 
@@ -131,7 +139,7 @@ def train_model(
 
     :return: Trained model.
     """
-    model_path = Path(f"pickles/{model_name}_{feature_set}_{'smote' if use_smote else 'no_smote'}.pkl")
+    model_path = Path(f"pickles/{model_name}_trained_model_{feature_set}_{smote_mapping[use_smote]}.pkl")
     return load_or_train_model(model_path, lambda: _train_new_model(X_train, y_train, model_name, use_smote, verbose))
 
 
@@ -155,10 +163,10 @@ def _train_new_model(
         if verbose:
             print(f"Applied SMOTE: {Counter(y_train)}")
 
-    clf = get_model_with_params(model_name)
+    clf = get_model_with_params(model_name, X_train, y_train)
     clf.fit(X_train, y_train)
     if verbose:
-        print(f"Trained {model_name} model with {'SMOTE' if use_smote else 'no SMOTE'}.")
+        print(f"Trained {model_name} model with {smote_mapping[use_smote]}.")
 
     return clf
 
@@ -182,11 +190,14 @@ def load_or_train_model(file_path: Path, train_func: Callable[[], object]) -> ob
     return model
 
 
-def get_model_with_params(model_name: str) -> object:
+def get_model_with_params(model_name: str, X_train: pd.DataFrame, y_train: pd.Series, verbose: bool = True) -> object:
     """
     Get model with optimal hyperparameters using GridSearchCV and Leave-One-Group-Out CV.
 
     :param model_name: Name of the model to instantiate.
+    :param X_train: Training data.
+    :param y_train: Training labels.
+    :param verbose: Boolean indicating whether to log progess to console.
 
     :return: Model with best hyperparameters.
     """
@@ -204,6 +215,10 @@ def get_model_with_params(model_name: str) -> object:
     if param_grid is None:
         return model_class()
 
+    groups = X_train.get("group_id", np.arange(len(X_train)))  # Default groups if column missing
     logo = LeaveOneGroupOut()
-    grid_search = GridSearchCV(model_class(), param_grid, cv=logo, scoring='f1', n_jobs=-1)
-    return model_class(**grid_search.best_params_)
+    gridsearch = GridSearchCV(model_class(), param_grid, cv=logo, scoring='f1', n_jobs=-1, verbose=4)
+    gridsearch.fit(X_train, y_train, groups=groups)
+
+    log_message(f"Found best parameters for {model_name}: {gridsearch.best_params_}", verbose)
+    return model_class(**gridsearch.best_params_)

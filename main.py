@@ -13,6 +13,7 @@ import ML
 import numpy as np
 from sklearn import svm, datasets
 from ML import train_and_evaluate_models
+from sklearn import linear_model
 
 
 def plot_gazes(participants, AOI_df, df):
@@ -139,7 +140,7 @@ def main():
     # rfe_features = ['PC1', 'PC10', 'PC11', 'PC14', 'PC21', 'PC29', 'PC32', 'PC35', 'PC41', 'PC45']
 
     # models = ["LinearSVM"]
-    models = ["LinearSVM", "RandomForest", "LogReg", "NaiveBates", "XGBoost"]
+    models = ["LinearSVM", "XGBoost"]
 
     train_and_evaluate_models(models, train_windows, probe_data['TUT'])
 
