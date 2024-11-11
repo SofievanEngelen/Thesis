@@ -138,6 +138,7 @@ def main():
     # print(X_rfe_selected.shape)
     # rfe_features = ['PC1', 'PC10', 'PC11', 'PC14', 'PC21', 'PC29', 'PC32', 'PC35', 'PC41', 'PC45']
 
+    # models = ["LinearSVM"]
     models = ["LinearSVM", "RandomForest", "LogReg", "NaiveBates", "XGBoost"]
 
     train_and_evaluate_models(models, train_windows, probe_data['TUT'])
