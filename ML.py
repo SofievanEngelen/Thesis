@@ -47,7 +47,7 @@ def retrieve_features(X: pd.DataFrame, feature_set: str, verbose: bool = True) -
     return X_pca_df
 
 
-def print_metrics(metrics: Dict[str, float]) -> None:
+def save_metrics(metrics: Dict[str, float]) -> None:
     """
     Print model performance metrics.
 
@@ -118,7 +118,7 @@ def evaluate_model(
 
     if verbose:
         print(f"Evaluation Metrics for {clf}:")
-        print_metrics(metrics)
+        save_metrics(metrics)
 
     return metrics
 
@@ -202,13 +202,21 @@ def get_model_with_params(model_name: str, X_train: pd.DataFrame, y_train: pd.Se
     :return: Model with best hyperparameters.
     """
     model_map = {
-        "XGBoost": (xgb.XGBClassifier, XGB_PARAMS),
+        "XGBoost": (xgb.XGBClassifier, {'alpha': [0], 'colsample_bytree': [0.6], 'eta': [0.05], 'gamma': [0], 'lambda': [1], 'max_depth': [12], 'min_child_weight': [1], 'n_estimators': [500], 'objective': ['binary:logistic'], 'subsample': [0.7], 'tree_method': ['hist']}),
         "LogReg": (linear_model.LogisticRegression, LR_PARAMS),
         "RandomForest": (ensemble.RandomForestClassifier, RF_PARAMS),
         "LinearSVM": (svm.LinearSVC, LSVM_PARAMS),
         "NaiveBayes": (naive_bayes.GaussianNB, None)
     }
+
     model_class, param_grid = model_map.get(model_name, (None, None))
+
+    num_pos = y_train.value_counts()[1]
+    num_neg = y_train.value_counts()[0]
+
+    if model_name == "XGBoost":
+        param_grid['scale_pos_weight'] = [num_neg / num_pos]
+
     if not model_class:
         raise ValueError(f"{model_name} is not a valid model.")
 

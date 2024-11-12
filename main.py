@@ -140,9 +140,11 @@ def main():
     # rfe_features = ['PC1', 'PC10', 'PC11', 'PC14', 'PC21', 'PC29', 'PC32', 'PC35', 'PC41', 'PC45']
 
     # models = ["LinearSVM"]
-    models = ["LinearSVM", "XGBoost"]
+    models = ['XGBoost', "LogReg", "RandomForest", "LinearSVM", "NaiveBayes"]
 
-    train_and_evaluate_models(models, train_windows, probe_data['TUT'])
+    # metrics = train_and_evaluate_models(models, train_windows, probe_data['TUT'])
+    # pd.DataFrame(metrics).T.to_csv("Preliminary_Results.csv", index=True, header=True)
+    metrics = pd.read_csv('Preliminary_Results.csv')
 
     # train_windows_df = training_windows('./processed_gaze_data.csv', constants.WINDOW_SIZE, 'train_windows.csv')
     # events_df, saccade_df = detect_events(df)

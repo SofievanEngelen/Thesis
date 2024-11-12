@@ -57,6 +57,7 @@ XGB_PARAMS = {'eta': [0.01, 0.05, 0.1],
               'min_child_weight': [1, 5, 10],
               'subsample': [0.6, 0.7, 0.8],
               'colsample_bytree': [0.4, 0.6, 0.8],
+              'scale_pos_weight': ['(num_neg / num_pos)'],
               'lambda': [1],
               'alpha': [0],
               'gamma': [0],
@@ -64,14 +65,17 @@ XGB_PARAMS = {'eta': [0.01, 0.05, 0.1],
               'tree_method': ['hist']}
 
 LR_PARAMS = {'penalty': ['l2'],
+             'class_weight': ['balanced'],
              'C': [0.0001, 0.01, 1],
              'max_iter': [500, 1000, 2000],
              'solver': ['liblinear', 'newton-cg', 'lbfgs', 'saga']}
 
-RF_PARAMS = {'n_estimators': [100, 200, 500],
+RF_PARAMS = {'class_weight': ['balanced'],
+             'n_estimators': [100, 200, 500],
              'max_depth': [None, 10, 30],
              'max_features': ['sqrt', 'log2', 10],
              'min_samples_split': [2, 5, 10],
              'min_samples_leaf': [1, 5, 10]}
 
-LSVM_PARAMS = {'C': [0.001, 0.1, 1]}
+LSVM_PARAMS = {'class_weight': ['balanced'],
+               'C': [0.001, 0.1, 1]}
