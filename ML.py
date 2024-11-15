@@ -202,7 +202,7 @@ def get_model_with_params(model_name: str, X_train: pd.DataFrame, y_train: pd.Se
     :return: Model with best hyperparameters.
     """
     model_map = {
-        "XGBoost": (xgb.XGBClassifier, {'alpha': [0], 'colsample_bytree': [0.6], 'eta': [0.05], 'gamma': [0], 'lambda': [1], 'max_depth': [12], 'min_child_weight': [1], 'n_estimators': [500], 'objective': ['binary:logistic'], 'subsample': [0.7], 'tree_method': ['hist']}),
+        "XGBoost": (xgb.XGBClassifier, {'alpha': [0], 'colsample_bytree': [0.4], 'eta': [0.1], 'gamma': [0], 'lambda': [1], 'max_depth': [3], 'min_child_weight': [10], 'n_estimators': [1000], 'objective': ['binary:logistic'], 'subsample': [0.7], 'tree_method': ['hist']}),
         "LogReg": (linear_model.LogisticRegression, LR_PARAMS),
         "RandomForest": (ensemble.RandomForestClassifier, RF_PARAMS),
         "LinearSVM": (svm.LinearSVC, LSVM_PARAMS),
@@ -211,10 +211,9 @@ def get_model_with_params(model_name: str, X_train: pd.DataFrame, y_train: pd.Se
 
     model_class, param_grid = model_map.get(model_name, (None, None))
 
-    num_pos = y_train.value_counts()[1]
-    num_neg = y_train.value_counts()[0]
-
     if model_name == "XGBoost":
+        num_pos = y_train.value_counts()[1]
+        num_neg = y_train.value_counts()[0]
         param_grid['scale_pos_weight'] = [num_neg / num_pos]
 
     if not model_class:

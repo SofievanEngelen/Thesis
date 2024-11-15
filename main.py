@@ -142,8 +142,8 @@ def main():
     # models = ["LinearSVM"]
     models = ['XGBoost', "LogReg", "RandomForest", "LinearSVM", "NaiveBayes"]
 
-    # metrics = train_and_evaluate_models(models, train_windows, probe_data['TUT'])
-    # pd.DataFrame(metrics).T.to_csv("Preliminary_Results.csv", index=True, header=True)
+    metrics = train_and_evaluate_models(models, train_windows, probe_data['TUT'])
+    pd.DataFrame(metrics).T.to_csv("Preliminary_Results.csv", index=True, header=True)
     metrics = pd.read_csv('Preliminary_Results.csv')
 
     # train_windows_df = training_windows('./processed_gaze_data.csv', constants.WINDOW_SIZE, 'train_windows.csv')
