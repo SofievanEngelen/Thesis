@@ -62,7 +62,8 @@ XGB_PARAMS = {'eta': [0.01, 0.05, 0.1],
               'alpha': [0],
               'gamma': [0],
               'objective': ['binary:logistic'],
-              'tree_method': ['hist']}
+              'tree_method': ['hist'],
+              'n_jobs': [None]}
 
 LR_PARAMS = {'penalty': ['l2'],
              'class_weight': ['balanced'],

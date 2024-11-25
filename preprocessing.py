@@ -1,7 +1,4 @@
 import os
-import re
-
-import numpy as np
 import pandas as pd
 from constants import log_message, WINDOW_MAPPING
 
@@ -121,7 +118,7 @@ def preprocess_probe_data(filepath: str,
         log_message("That file already exists, reading from existing file...", verbose)
         return pd.read_csv(to_file)
 
-    data, unique_participants = rename_participants(pd.read_csv(filepath))
+    data, _ = rename_participants(pd.read_csv(filepath))
 
     drop_indices = []
     for participant, probe_list in dropped_windows.items():

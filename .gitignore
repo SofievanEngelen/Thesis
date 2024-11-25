@@ -6,10 +6,13 @@ old stuff/attention_scores.csv
 old stuff/weighted_averages.csv
 
 Data/
+old-pickles/
 pickles/
+new-pickles/
+p/
 
 R-microsaccades/
 
-
+*.pkl
 *.json
 *.csv

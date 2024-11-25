@@ -132,14 +132,12 @@ def detect_events(df: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
 
     events_list = detect_and_process_events(r_df)
     fixations_r_df = events_list.rx2('fixations')
-    # blinks_r_df = events_list.rx2('blinks')
     saccades_r_df = events_list.rx2('saccades')
 
     # convert R DataFrame back to Pandas
     fixations_df = pandas2ri.rpy2py(fixations_r_df)
-    # blinks_df = pandas2ri.rpy2py(blinks_r_df)
     saccades_df = pandas2ri.rpy2py(saccades_r_df)
     end_time = time.time()
     print(f"Done detecting events for window. Took {end_time - start_time} seconds.")
 
-    return fixations_df, saccades_df#, blinks_df
+    return fixations_df, saccades_df

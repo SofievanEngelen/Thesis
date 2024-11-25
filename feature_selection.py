@@ -7,7 +7,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import RFE
 
 
-def PCA_analysis(X, verbose=True):
+def PCA_analysis(X: pd.DataFrame, features: str, verbose=True) -> pd.DataFrame:
     """
     Perform PCA on the data with MLE to determine the optimal number of components automatically.
 
@@ -36,13 +36,13 @@ def PCA_analysis(X, verbose=True):
     log_message(f"Transformed PCA Data Shape: {X_pca_df.shape}", verbose)
 
     # Save component loadings for interpretation
-    loadings = pd.DataFrame(pca.components_, columns=feature_cols.columns, index=X_pca_df.columns)
-    loadings.to_csv("pca_loadings.csv", index=True)
+    loadings = pd.DataFrame(pca.components_, columns=feature_cols.columns, index=X_pca_df.columns).T
+    loadings.to_csv(f"pca_loadings_{features}.csv", index=True)
 
     X_pca_df['Participant'] = X['participant']
     X_pca_df['group_id'] = X['group_id']
 
-    return X_pca_df, pca.explained_variance_ratio_, pca.singular_values_
+    return X_pca_df
 
 
 def RFE_selection(X_pca_df, y, n_features_rfe=30, verbose=True):
