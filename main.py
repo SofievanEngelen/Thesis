@@ -1,19 +1,8 @@
-import re
-from collections import defaultdict
-from typing import List
 
 import pandas as pd
 from matplotlib import pyplot as plt
-from windows import training_windows
-from preprocessing import preprocess_gaze_data, preprocess_probe_data
-from constants import *
-from sklearn.model_selection import LeaveOneGroupOut, GridSearchCV
-from feature_extraction import compute_features
-import ML
-import numpy as np
-from sklearn import svm, datasets
+
 from ML import train_and_evaluate_models
-from sklearn import linear_model
 
 
 def plot_gazes(participants, AOI_df, df):
