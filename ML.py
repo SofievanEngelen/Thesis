@@ -409,11 +409,11 @@ def get_model_with_params(model_name: str, features, use_smote, groups, X_train:
 
     model_class, param_grid = model_map.get(model_name, (None, None))
 
-    # if model_name == "XGBoost":
-    #     num_pos = y_train.value_counts()[1]
-    #     num_neg = y_train.value_counts()[0]
-    #     param_grid['scale_pos_weight'] = [num_neg / num_pos]
-    #
+    if model_name == "XGBoost":
+        num_pos = y_train.value_counts()[1]
+        num_neg = y_train.value_counts()[0]
+        param_grid['scale_pos_weight'] = [num_neg / num_pos]
+
     if not model_class:
         raise ValueError(f"{model_name} is not a valid model.")
 
@@ -422,7 +422,7 @@ def get_model_with_params(model_name: str, features, use_smote, groups, X_train:
 
     print(X_train.columns)
     logo = LeaveOneGroupOut()
-    gridsearch = GridSearchCV(model_class(), param_grid, cv=logo, scoring='f1', n_jobs=-1)
+    gridsearch = GridSearchCV(model_class(), param_grid, cv=logo, scoring='f1', n_jobs=-1, verbose=4)
     gridsearch.fit(X_train, y_train, groups=groups)
 
     log_message(f"Found best parameters for {model_name}: {gridsearch.best_params_}", verbose)
