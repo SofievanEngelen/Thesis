@@ -422,7 +422,7 @@ def get_model_with_params(model_name: str, features, use_smote, groups, X_train:
 
     print(X_train.columns)
     logo = LeaveOneGroupOut()
-    gridsearch = GridSearchCV(model_class(), param_grid, cv=logo, scoring='f1', n_jobs=-1, verbose=4)
+    gridsearch = GridSearchCV(model_class(), param_grid, cv=logo, scoring='f1', n_jobs=-1)
     gridsearch.fit(X_train, y_train, groups=groups)
 
     log_message(f"Found best parameters for {model_name}: {gridsearch.best_params_}", verbose)
