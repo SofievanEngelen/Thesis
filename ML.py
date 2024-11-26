@@ -211,7 +211,8 @@ def train_and_evaluate_models(
 
     for feature_set in ["G+L", "G", "L"]:
         X_transformed = retrieve_features(X, feature_set, verbose)
-        X_transformed.drop(columns=["Participant"], inplace=True)
+        if "participant" in X_transformed.columns:
+            X_transformed.drop(columns=["participant"], inplace=True)
 
         X_train, X_test, y_train, y_test = train_test_split(X_transformed, y, test_size=0.2, random_state=RANDOM_SEED)
 
@@ -428,4 +429,5 @@ def get_model_with_params(model_name: str, features, use_smote, groups, X_train:
     log_message(f"Found best parameters for {model_name}: {gridsearch.best_params_}", verbose)
     # params = param_mapping[f"{model_name} {features} {use_smote}"]
     # print(params)
+    # params = {'objective': 'binary:logistic', 'base_score': None, 'booster': None, 'colsample_bylevel': None, 'colsample_bynode': None, 'colsample_bytree': 0.8, 'device': None, 'eval_metric': None, 'gamma': 0, 'grow_policy': None, 'interaction_constraints': None, 'learning_rate': None, 'max_bin': None, 'max_cat_threshold': None, 'max_cat_to_onehot': None, 'max_delta_step': None, 'max_depth': 3, 'max_leaves': None, 'min_child_weight': 5, 'monotone_constraints': None, 'multi_strategy': None, 'n_jobs': None, 'num_parallel_tree': None, 'random_state': None, 'reg_alpha': None, 'reg_lambda': None, 'sampling_method': None, 'scale_pos_weight': 1.88, 'subsample': 0.8, 'tree_method': 'hist', 'validate_parameters': None, 'verbosity': None, 'alpha': 0, 'eta': 0.01, 'lambda': 1}
     return model_class(**gridsearch.best_params_)
