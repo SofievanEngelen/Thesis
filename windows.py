@@ -1,116 +1,96 @@
 import os
-import time
-
 import pandas as pd
-from IPython.core.display_functions import display
-from pandas import DataFrame, unique
+from typing import Tuple, List, Optional
 from feature_extraction import compute_features
 from constants import log_message
 
 
-def create_window(df: pd.DataFrame, start_time: int, end_time: int, verbose: bool = True) -> (pd.DataFrame, pd.DataFrame):
+def create_window(df: pd.DataFrame, start_time: int, end_time: int, verbose: bool = True) -> pd.DataFrame:
     """
-        Create a Data window for a specific time range and process it to detect fixations.
+    Create a data window for a specific time range and process it to detect fixations.
 
-        :param df: The input DataFrame containing participant Data.
-        :param start_time: The start time for the window (in milliseconds).
-        :param end_time: The end time for the window (in milliseconds).
-        :param verbose: If true, log progress to console. Default: True.
-
-        :return: A DataFrame containing detected fixation events for the time window.
+    :param df: The input DataFrame containing participant data.
+    :param start_time: The start time for the window (in milliseconds).
+    :param end_time: The end time for the window (in milliseconds).
+    :param verbose: If True, log progress to the console. Defaults to True.
+    :return: A DataFrame containing detected fixation events for the time window.
     """
-    # filter out Data in given window
+    # Filter data within the given time window
     window_data = df[(df['time'] > start_time) & (df['time'] < end_time)]
 
-    # set trial to start_time in seconds
-    window_data.loc[:, 'trial'] = int(start_time / 1000)
+    # Set trial to start_time in seconds
+    window_data['trial'] = int(start_time / 1000)
 
-    window_data.reset_index(inplace=True)
-    window_data.to_csv('window_data.csv', index=False)
+    # Reset index for consistency
+    window_data.reset_index(drop=True, inplace=True)
 
-    log_message(f"Finished preparing window data. Trial: {int(start_time / 1000)}", verbose)
+    # Optionally save window data for debugging
+    if verbose:
+        window_data.to_csv('window_data.csv', index=False)
+        log_message(f"Prepared window data. Trial: {int(start_time / 1000)}", verbose)
 
-    # detect gaze events in window Data
+    # Detect gaze events in the window data
     window_features = compute_features(window_data)
-    log_message(f"Finished computing window features. Trial: {int(start_time / 1000)}", verbose)
+
+    if verbose:
+        log_message(f"Computed window features. Trial: {int(start_time / 1000)}", verbose)
 
     return window_features
 
 
-def start_sliding_window(participant: int, data: DataFrame, window_size: int) -> None:
+def training_windows(df: pd.DataFrame, window_size: int, to_file: Optional[str] = None, verbose: bool = True) \
+        -> Tuple[pd.DataFrame, List[str]]:
     """
-        Process Data using a sliding window approach for a specific participant.
+    Generate training data using sliding windows from paragraphs of interest.
 
-        :param participant: The ID of the participant whose Data is being processed.
-        :param data: The input DataFrame containing participant Data.
-        :param window_size: The size of the sliding window (in milliseconds).
-
-        :return: The function prints the window Data for each sliding window step.
+    :param df: DataFrame containing participant data.
+    :param window_size: The size of the sliding window (in milliseconds).
+    :param to_file: An optional path to save the resulting DataFrame. If the file exists, it will be read instead.
+    :param verbose: If True, log progress to the console. Defaults to True.
+    :return: A tuple containing the training DataFrame and a list of dropped windows.
     """
-
-    start_time = 0
-
-    data['Participant'] = data['Participant'].astype(int)
-    p_data = data[data['Participant'] == participant]
-
-    if p_data.empty:
-        raise Exception(f'No participant {participant} found')
-
-    while True:
-        end_time = start_time + window_size
-        window_df = create_window(p_data, start_time, end_time)
-        print(window_df.head())
-        start_time += 1000
-
-        if start_time > (int(p_data['time'].max()) - window_size + 1000):
-            break
-
-
-def training_windows(df: pd.DataFrame,  window_size: int, features: bool = False, to_file: str = None,
-                     verbose: bool = True) -> tuple[pd.DataFrame, list[str]]:
-    """
-        Generate training Data using sliding windows from paragraphs of interest.
-
-        :param df: Dataframe containing participant Data.
-        :param window_size: The size of the sliding window (in milliseconds).
-        :param features: Boolean indicating whether to compute the features of the probe window
-        :param to_file: The path to save the resulting DataFrame. If the file already exists, the function will read
-        from it.
-        :param verbose: If true, log progress to console. Default: True
-
-        :return: A DataFrame containing training Data with detected fixations in each window.
-    """
-    # if to_file and os.path.isfile(to_file):
-    #     return pd.read_csv(to_file)
+    if to_file and os.path.isfile(to_file):
+        log_message(f"File already exists at {to_file}, reading existing file...", verbose)
+        return pd.read_csv(to_file), []
 
     probe_paragraphs = [4, 10, 15, 20, 26, 30, 36]
-
     train_features_df = []
     dropped_windows = []
-    for p in range(1, len(unique(df['Participant'])) + 1):
-        print("Participant ", p)
-        p_df = df[df['Participant'] == p]
+
+    for participant_id in range(1, len(df['Participant'].unique()) + 1):
+        log_message(f"Processing Participant {participant_id}...", verbose)
+        participant_data = df[df['Participant'] == participant_id]
+
         for paragraph in probe_paragraphs:
-            # End time is the last time value of the probe paragraph.
-            end_time = p_df.loc[p_df['Paragraph'] == paragraph, 'time'].iloc[-1]
-            start_time = end_time - window_size
+            try:
+                # Get end time for the current paragraph
+                paragraph_data = participant_data[participant_data['Paragraph'] == paragraph]
+                if paragraph_data.empty:
+                    log_message(f"No data for participant {participant_id}, paragraph {paragraph}.", verbose)
+                    continue
 
-            features_df = create_window(p_df, start_time, end_time)
+                end_time = paragraph_data['time'].iloc[-1]
+                start_time = end_time - window_size
 
-            log_message(f"Finished creating window p{p}, paragraph {paragraph}", verbose)
+                # Compute features for the window
+                features_df = create_window(participant_data, start_time, end_time, verbose)
 
-            if features_df.empty:
-                window_string = f"p{p}, paragraph {paragraph}"
-                dropped_windows.append(window_string)
-                # drop probe from probe df
-                log_message(f"Something went wrong computing features, window dropped. {window_string}", verbose)
+                if features_df.empty:
+                    dropped_windows.append(f"Participant {participant_id}, Paragraph {paragraph}")
+                    log_message(f"Empty features for Participant {participant_id}, Paragraph {paragraph}. Dropped.",
+                                verbose)
+                else:
+                    train_features_df.append(features_df)
 
-            train_features_df.append(features_df)
+            except Exception as e:
+                dropped_windows.append(f"Participant {participant_id}, Paragraph {paragraph}")
+                log_message(f"Error processing Participant {participant_id}, Paragraph {paragraph}: {str(e)}", verbose)
 
-    train_df = pd.concat(train_features_df)
+    # Combine all feature DataFrames
+    train_df = pd.concat(train_features_df, ignore_index=True)
 
     if to_file:
-        train_df.to_csv(to_file, index=False, header=True)
+        train_df.to_csv(to_file, index=False)
+        log_message(f"Training data saved to {to_file}.", verbose)
 
     return train_df, dropped_windows
-

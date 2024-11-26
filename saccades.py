@@ -125,19 +125,41 @@ aggregate.saccades <- function(samples) {
 detect_and_process_events = robjects.globalenv['detect.and.process.events']
 
 
-def detect_events(df: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
-    start_time = time.time()
-    # convert Pandas to R DataFrame
-    r_df = robjects.pandas2ri.py2rpy(df)
+def detect_events(df: pd.DataFrame, lambda_val: int = 6, smooth_coordinates: bool = True, verbose: bool = True) \
+        -> (pd.DataFrame, pd.DataFrame):
+    """
+    Detects fixation and saccade events from eye-tracking data using R's Engbert-Kliegl algorithm.
 
-    events_list = detect_and_process_events(r_df)
+    :param df: Input Pandas DataFrame containing eye-tracking samples with required columns.
+    :param lambda_val: Velocity threshold parameter for saccade detection. Defaults to 6.
+    :param smooth_coordinates: Whether to apply coordinate smoothing. Defaults to True.
+    :param verbose: Whether to log processing time. Defaults to True.
+    :return: fixations_df: DataFrame containing aggregated fixation events.
+            saccades_df: DataFrame containing aggregated saccade events.
+    """
+    if verbose:
+        start_time = time.time()
+
+    # Convert Pandas to R DataFrame
+    r_df = pandas2ri.py2rpy(df)
+
+    # Call R function with parameters
+    events_list = detect_and_process_events(
+        r_df,
+        lambda_val=lambda_val,
+        smooth_coordinates=smooth_coordinates
+    )
+
+    # Extract fixations and saccades as R DataFrames
     fixations_r_df = events_list.rx2('fixations')
     saccades_r_df = events_list.rx2('saccades')
 
-    # convert R DataFrame back to Pandas
+    # Convert R DataFrame back to Pandas
     fixations_df = pandas2ri.rpy2py(fixations_r_df)
     saccades_df = pandas2ri.rpy2py(saccades_r_df)
-    end_time = time.time()
-    print(f"Done detecting events for window. Took {end_time - start_time} seconds.")
+
+    if verbose:
+        end_time = time.time()
+        print(f"Event detection completed in {end_time - start_time:.2f} seconds.")
 
     return fixations_df, saccades_df

@@ -1,116 +1,48 @@
-from sklearn.model_selection import cross_val_score
-from constants import log_message, RANDOM_SEED
-import numpy as np
-import pandas as pd
 from sklearn.decomposition import PCA
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_selection import RFE
+import pandas as pd
+from constants import log_message, RANDOM_SEED
 
 
-def PCA_analysis(X: pd.DataFrame, features: str, verbose=True) -> pd.DataFrame:
+def PCA_analysis(X: pd.DataFrame, features: str, verbose: bool = True) -> pd.DataFrame:
     """
-    Perform PCA on the data with MLE to determine the optimal number of components automatically.
+    Perform Principal Component Analysis (PCA) on the dataset, using Maximum Likelihood Estimation (MLE)
+    to automatically determine the optimal number of components.
 
     Parameters:
-    - X: DataFrame of input features.
-    - verbose: Boolean for verbosity control.
+    - X (pd.DataFrame): Input DataFrame containing the features and metadata.
+    - features (str): Identifier for the feature set, used for saving the loadings.
+    - verbose (bool, optional): Flag for enabling verbose logging. Defaults to True.
 
     Returns:
-    - X_pca_df: DataFrame of PCA-transformed components.
-    - explained_variance_ratio_: Array of variance explained by each component.
-    - singular_values_: Array of singular values.
+    - pd.DataFrame: DataFrame containing the PCA-transformed components and original metadata.
     """
-    # Drop non-feature columns (assumes names; adjust as necessary)
-    feature_cols = X.drop(columns=['participant', 'paragraph', 'trial', 'group_id'], errors='ignore')
+    # Exclude non-feature columns (assumes metadata columns; adjust as necessary)
+    metadata_columns = ['participant', 'paragraph', 'trial', 'group_id']
+    feature_cols = X.drop(columns=metadata_columns, errors='ignore')
 
-    # Initialize PCA with MLE for automatic component selection
-    pca = PCA(n_components='mle')
+    # Initialize PCA with MLE to determine the optimal number of components
+    pca = PCA(n_components='mle', random_state=RANDOM_SEED)
     X_pca = pca.fit_transform(feature_cols)
 
-    # Create DataFrame for PCA-transformed data
+    # Create a DataFrame for PCA-transformed data
     X_pca_df = pd.DataFrame(X_pca, columns=[f'PC{i + 1}' for i in range(pca.n_components_)])
 
-    # Log explained variance and singular values
-    log_message(f"Explained Variance Ratio (first 5 components): {pca.explained_variance_ratio_[:5]}", verbose)
-    log_message(f"Singular Values (first 5 components): {pca.singular_values_[:5]}", verbose)
-    log_message(f"Transformed PCA Data Shape: {X_pca_df.shape}", verbose)
+    # Log explained variance ratio and singular values
+    if verbose:
+        log_message(f"Explained Variance Ratio (first 5 components): {pca.explained_variance_ratio_[:5]}", verbose)
+        log_message(f"Singular Values (first 5 components): {pca.singular_values_[:5]}", verbose)
+        log_message(f"Transformed PCA Data Shape: {X_pca_df.shape}", verbose)
 
-    # Save component loadings for interpretation
-    loadings = pd.DataFrame(pca.components_, columns=feature_cols.columns, index=X_pca_df.columns).T
+    # Save PCA component loadings for feature interpretation
+    loadings = pd.DataFrame(
+        pca.components_,
+        columns=feature_cols.columns,
+        index=[f'PC{i + 1}' for i in range(pca.n_components_)]
+    )
     loadings.to_csv(f"pca_loadings_{features}.csv", index=True)
 
-    X_pca_df['Participant'] = X['participant']
+    # Add original metadata back to the PCA-transformed DataFrame
+    X_pca_df['participant'] = X['participant']
     X_pca_df['group_id'] = X['group_id']
 
     return X_pca_df
-
-
-def RFE_selection(X_pca_df, y, n_features_rfe=30, verbose=True):
-    """
-    Perform RFE on PCA-transformed data to select the most predictive components.
-
-    Parameters:
-    - X_pca_df: DataFrame of PCA-transformed features.
-    - y: Target variable.
-    - n_features_rfe: Number of components to select in RFE.
-    - verbose: Boolean for verbosity control.
-
-    Returns:
-    - X_rfe_selected: DataFrame of selected components after RFE.
-    """
-    # Initialize classifier and RFE
-    estimator = RandomForestClassifier(random_state=42)
-    rfe = RFE(estimator, n_features_to_select=n_features_rfe)
-    rfe.fit(X_pca_df, y)
-
-    # Retrieve and log selected components
-    selected_pca_components = X_pca_df.columns[rfe.support_]
-    log_message(f"Selected PCA components by RFE: {selected_pca_components.tolist()}", verbose)
-
-    # Filter the dataset to include only RFE-selected components
-    X_rfe_selected = X_pca_df[selected_pca_components]
-
-    return X_rfe_selected
-
-
-def optimal_features_RFE(X_pca_df, y, max_features=30, verbose=True):
-    """
-    Perform RFE on PCA-transformed data and use cross-validation to find the optimal number of components.
-
-    Parameters:
-    - X_pca_df: DataFrame of PCA-transformed features.
-    - y: Target variable.
-    - max_features: Maximum number of features to test.
-    - verbose: Boolean for verbosity control.
-
-    Returns:
-    - optimal_n_features: The optimal number of features based on cross-validation performance.
-    - best_rfe_model: The RFE model with the optimal number of features.
-    """
-    # Initialize RandomForest model
-    estimator = RandomForestClassifier(random_state=RANDOM_SEED)
-
-    # Store cross-validation scores for different feature subsets
-    mean_scores = []
-
-    # Try different numbers of features (1 to max_features)
-    for n_features in range(1, max_features + 1):
-        log_message(f"Evaluating RFE with {n_features} features...", verbose)
-
-        # Set up RFE with the current number of features to select
-        rfe = RFE(estimator, n_features_to_select=n_features)
-
-        # Perform cross-validation and store the mean score
-        scores = cross_val_score(rfe, X_pca_df, y, cv=5, scoring='accuracy')  # 5-fold CV, accuracy as scoring
-        mean_scores.append(np.mean(scores))
-        log_message(f"Mean cross-validation score with {n_features} features: {np.mean(scores)}", verbose)
-
-    # Find the number of features with the highest cross-validation score
-    optimal_n_features = np.argmax(mean_scores) + 1  # Add 1 since range starts from 1
-    best_rfe_model = RFE(estimator, n_features_to_select=optimal_n_features)
-    best_rfe_model.fit(X_pca_df, y)
-
-    log_message(f"Optimal number of features: {optimal_n_features}", verbose)
-
-    # Return the RFE model with optimal number of features
-    return optimal_n_features, best_rfe_model
