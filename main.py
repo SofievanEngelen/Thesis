@@ -127,7 +127,7 @@ def main():
 
     # ML
     models = ['XGBoost', "LogReg", "RandomForest", "LinearSVM", "NaiveBayes"]
-    models = ['RandomForest']
+    models = ['XGBoost']
 
     metrics = train_and_evaluate_models(models, train_windows, probe_data['TUT'])
     pd.DataFrame(metrics).T.to_csv("Results3.csv", index=True, header=True)
