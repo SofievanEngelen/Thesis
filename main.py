@@ -1,43 +1,17 @@
-
 import pandas as pd
 from matplotlib import pyplot as plt
-
+from constants import *
 from ML import train_and_evaluate_models
-
-
-def plot_gazes(participants, AOI_df, df):
-    plt.figure(figsize=(10, 6))
-
-    for i, participant in enumerate(participants):
-        print(i, participant)
-        participant_data = df.loc[df['Participant'] == participant]
-        print(participant_data.head())
-        if not participant_data.empty:
-            num = AOI_df.loc[(AOI_df['Participant'] == participant), 'AOIGazes'].values[0]
-            plt.scatter(participant_data['x'], participant_data['y'], label=f"{participant}: {num}", s=10)
-
-    # Plot the gaze Data to visualize
-    plt.title(f"Gaze Points P{participants}")
-    plt.xlabel("X")
-    plt.ylabel("Y")
-    plt.legend(title="Participants")
-    plt.viridis()
-    plt.grid()
-    plt.show()
+from preprocessing import preprocess_gaze_data, preprocess_probe_data
+from windows import training_windows
+from feature_extraction import compute_features
 
 
 def main():
-    pass
     # Preprocessing
-    # processed_gaze_data = preprocess_gaze_data(filepath=RAW_GAZE_DF_PATH,
-    #                                            to_file=PRC_GAZE_DF_PATH)
+    processed_gaze_data = preprocess_gaze_data(filepath=RAW_GAZE_DF_PATH,
+                                               to_file=PRC_GAZE_DF_PATH)
 
-    # Training windows
-    # test_window = pd.read_csv("/Users/sofie/dev/Python/Uni/Thesis/Thesis - code/Data/processed-data/test_window.csv")
-    # compute_features(test_window).to_csv('/Users/sofie/dev/Python/Uni/Thesis/Thesis - code/Data/processed-data/'
-    #                                      'test_window_features.csv', header=True, index=False)
-
-    # _, dropped_windows = training_windows(processed_gaze_data, WINDOW_SIZE, to_file=TRAIN_FEATURES_PATH)
     dropped_windows = {'2': [4], '4': [4, 10, 15, 20, 30], '5': [4, 10, 15, 30, 36], '6': [4, 10, 26],
                        '10': [4, 15, 30],
                        '11': [15, 26, 30], '13': [26, 36], '16': [4, 15], '20': [4, 10, 15, 20, 26, 30, 36], '21': [30],
@@ -102,43 +76,19 @@ def main():
                        '338': [4, 10, 20, 30, 36], '340': [4, 10, 15, 26, 30, 36], '342': [4, 10, 15, 26, 30, 36],
                        '343': [4, 10, 15, 20, 26, 30, 36], '344': [4, 10, 15, 20, 26, 30, 36], '345': [10, 20],
                        '347': [20, 26], '349': [20], '351': [4, 10, 15, 20, 30, 36]}
+    processed_probe_data = preprocess_probe_data(filepath='Data/original-data/probe_data.csv',
+                                                 dropped_windows=dropped_windows,
+                                                 verbose=True,
+                                                 to_file="Data/processed-data/processed_probe_data.csv")
 
-    # processed_probe_data = preprocess_probe_data(filepath='Data/original-data/probe_data.csv',
-    #                                              dropped_windows=dropped_windows,
-    #                                              verbose=True,
-    #                                              to_file="Data/processed-data/processed_probe_data.csv")
+    # Training windows and features
+    train_windows, _ = training_windows(processed_gaze_data, WINDOW_SIZE, 'train_windows.csv')
+    train_windows_features = compute_features(train_windows)
 
-    probe_data = pd.read_csv('Data/processed-data/processed_probe_data.csv')
-    train_windows = pd.read_csv('Data/processed-data/train_windows_features.csv')
-
-    # print(len(train_windows.columns))
-    #
-    #
-
-    # train_windows_df = training_windows('./processed_gaze_data.csv', WINDOW_SIZE, 'train_windows.csv')
-    # events_df, saccade_df = detect_events(df)
-    # print(events_df)
-    # events_df.to_csv("events_test.csv")
-    # saccade_df.to_csv("sac_test.csv")
-    # print(compute_global_features(events_df, saccade_df))
-
-    # Windows
-    # start_sliding_window(1, Data=processed_gaze_data, window_size=WINDOW_SIZE)  # Window size in milliseconds => 20 seconds
-
-    # ML
+    # Machine Learning
     models = ['XGBoost', "LogReg", "RandomForest", "LinearSVM", "NaiveBayes"]
-    models = ['XGBoost']
-
-    metrics = train_and_evaluate_models(models, train_windows, probe_data['TUT'])
-    pd.DataFrame(metrics).T.to_csv("Results3.csv", index=True, header=True)
-    # 1 -> old pickle (with participant)
-    # 2 -> new pickle (without participant, old hp)
-    # 3 -> new hp
-
-
-    # metrics_df = pd.read_csv("Actual_Results.csv")
-    # metrics_df['Average Score'] = metrics_df[['Balanced Accuracy', "F1 Score", "Cohen's kappa", "MCC"]].mean(axis=1)
-    # metrics_df.to_csv("Actual_Results.csv", index=False, header=True)
+    metrics = train_and_evaluate_models(models, train_windows_features, processed_probe_data['TUT'])
+    pd.DataFrame(metrics).T.to_csv("Results.csv", index=True, header=True)
 
 
 if __name__ == "__main__":

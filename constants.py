@@ -23,11 +23,12 @@ GLOBAL_FEATURES: List[str] = [
     'saccade_angle_mean', 'saccade_angle_median', 'saccade_angle_std',
     'saccade_angle_max', 'saccade_angle_min', 'saccade_angle_range',
     'saccade_angle_kurtosis', 'saccade_angle_skewness',
-    'horizontal_saccade_ratio', 'fixation_saccade_ratio', 'num_fixations_AOI'
+    'horizontal_saccade_ratio', 'fixation_saccade_ratio'
 ]
 
 LOCAL_FEATURES: List[str] = [
-    'participant', 'group_id', 'fixation_AOI_duration__mean',
+    'participant', 'group_id', 'num_fixations_AOI',
+    'fixation_AOI_duration__mean',
     'fixation_AOI_duration__median', 'fixation_AOI_duration__std',
     'fixation_AOI_duration__max', 'fixation_AOI_duration__min',
     'fixation_AOI_duration__range', 'fixation_AOI_duration__kurtosis',
